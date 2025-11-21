@@ -3,7 +3,8 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 // Thunk: send login OTP
 export const login = createAsyncThunk('auth/login', async (credentials, thunkAPI) => {
 	try {
-		const res = await fetch('/api/login', {
+		const backendBase = 'http://localhost:3000';
+		const res = await fetch(`${backendBase}/api/login`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(credentials),

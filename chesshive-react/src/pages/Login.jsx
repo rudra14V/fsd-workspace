@@ -218,7 +218,7 @@ export default function Login(){
           {dynamicError && <div className="error">{dynamicError}</div>}
           {dynamicSuccess && <div className="success">{dynamicSuccess}</div>}
 
-          <form action="/login" method="POST" onSubmit={auth.otpSent ? onVerifyOtp : onSubmitLogin}>
+          <form onSubmit={auth.otpSent ? onVerifyOtp : onSubmitLogin}>
             {!auth.otpSent ? (
               <>
                 <div>
