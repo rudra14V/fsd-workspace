@@ -3,7 +3,7 @@
 This repository contains two main parts:
 
 - `chesshive-react/` — React Single Page Application (frontend)
-- `ChessHive.v1.0.2/` — Legacy Express server + Socket.IO (backend)
+- `ChessHivev1.0.2/` — Legacy Express server + Socket.IO (backend)
 
 This README documents how to run the website locally, what each route does, where data is loaded from, database collections, and developer notes for extending the project.
 
@@ -18,7 +18,7 @@ This README documents how to run the website locally, what each route does, wher
 ## Run backend (Express + Socket.IO)
 1. Open PowerShell, go to the server folder:
 ```powershell
-cd .\ChessHive.v1.0.2\
+cd .\ChessHivev1.0.2\
 npm install
 node app.js
 ```
@@ -50,7 +50,7 @@ Deployment: You can build the frontend with `npm run build` in `chesshive-react`
   - `src/pages/` — page components (Home, Login, ContactUs, player/*, organizer/*, coordinator/*, admin/*)
   - `src/index.css` — global styles and theme variables
 
-- `ChessHive.v1.0.2/` — backend
+- `ChessHivev1.0.2/` — backend
   - `app.js` — Express app, session setup, Socket.IO server, and mounting of routers
   - `player_app.js` — player router (mounted at `/player`) with JSON APIs under `/player/api/*`
   - `routes/auth.js` — signup/login, server-rendered pages, and `POST /contactus` (form flow)
@@ -170,7 +170,6 @@ The Express server exposes both server-rendered pages and JSON APIs. Important e
 
 ## Where I edited files recently
 - Updated frontend CSS and player pages to use theme variables (dark mode improvements).
-- Wrote `chesshive-react/docs/Website_Flow_Telugu.md` and generated `Website_Flow_Telugu.docx`.
 
 ---
 
