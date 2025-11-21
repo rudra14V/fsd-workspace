@@ -1,0 +1,68 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Player dark theme variables and common overrides. Player pages call the
+   `usePlayerTheme` hook which adds `player-dark` to the body. These rules
+   supply variables and some common overrides to make player pages dark. */
+:root {
+  --sea-green: #2E8B57;
+  --cream: #FFFDD0;
+  --sky-blue: #87CEEB;
+  --page-bg: var(--cream);
+  --content-bg: #ffffff;
+  --text-color: #0b0b0b;
+  --border-color: #ddd;
+  --row-hover-bg: #f9f9f9;
+  --on-accent: #ffffff;
+  --sky-blue-hover: #6CB4D4;
+}
+
+.player-dark {
+  --sea-green: #60b3a6; /* toned teal for accents */
+  --cream: #071327; /* page background */
+  --sky-blue: #2563eb;
+  --page-bg: #071327;
+  --content-bg: #0b1220;
+  --text-color: #e6eef6;
+  --border-color: #253444;
+  --row-hover-bg: #0f1a26;
+  --on-accent: #e6eef6;
+  --sky-blue-hover: #1f4fc4;
+}
+
+/* Some generic class overrides to make inline-scoped player styles behave
+   nicely in dark mode. These target common class names used across player
+   pages. */
+.player-dark .page {
+  background-color: var(--page-bg) !important;
+  color: var(--text-color) !important;
+}
+.player-dark .content,
+.player-dark .updates-section,
+.player-dark .form-container,
+.player-dark .wallet,
+.player-dark .notifications-content,
+.player-dark .notifications-list li,
+.player-dark .container-player-profile {
+  background: var(--content-bg) !important;
+  color: var(--text-color) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+}
+.player-dark .sidebar { background: #081b1b !important; }
+.player-dark h1, .player-dark h2, .player-dark h3 { color: var(--sky-blue) !important; }
+.player-dark a, .player-dark .back { color: var(--text-color) !important; }
+.player-dark .price-tag { background: var(--sea-green) !important; color: #000 !important; }
+.player-dark .approve-btn { background-color: var(--sea-green) !important; color: var(--content-bg) !important; }
+.player-dark .logout-box button { background: var(--sky-blue) !important; color: var(--content-bg) !important; }
+
