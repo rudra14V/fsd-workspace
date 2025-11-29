@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 const STORAGE_KEY = 'playerTheme'; // 'dark' | 'light'
 
@@ -8,21 +8,51 @@ export default function usePlayerTheme() {
     try {
       const v = localStorage.getItem(STORAGE_KEY);
       if (v) return v === 'dark';
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) {}
     return false;
   });
+  const loadedFromServerRef = useRef(false);
 
+  // Apply theme to body + localStorage + push to server (if user logged in)
   useEffect(() => {
     try {
       if (isDark) document.body.classList.add('player-dark');
       else document.body.classList.remove('player-dark');
       localStorage.setItem(STORAGE_KEY, isDark ? 'dark' : 'light');
-    } catch (e) {
-      // ignore (e.g., SSR)
+    } catch (e) {}
+    // Avoid posting immediately after initial server load
+    if (loadedFromServerRef.current) {
+      // Persist to backend if session exists
+      fetch('/api/theme', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ theme: isDark ? 'dark' : 'light' })
+      }).catch(() => {});
     }
   }, [isDark]);
+
+  // Load server preference if logged in
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/theme', { credentials: 'include' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled && data && data.theme) {
+          const serverIsDark = data.theme === 'dark';
+          loadedFromServerRef.current = true;
+          setIsDark(serverIsDark);
+        } else {
+          loadedFromServerRef.current = true; // still allow future POSTs
+        }
+      } catch (e) {
+        loadedFromServerRef.current = true; // fallback
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const toggleTheme = useCallback(() => setIsDark(s => !s), []);
 

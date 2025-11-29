@@ -202,6 +202,34 @@ app.get('/api/session', (req, res) => {
   res.json({ userEmail: req.session.userEmail || null, userRole: req.session.userRole || null, username: req.session.username || null });
 });
 
+// Theme preference (persist per user)
+app.get('/api/theme', async (req, res) => {
+  try {
+    if (!req.session.userEmail) return res.json({ success: true, theme: null });
+    const db = await connectDB();
+    const user = await db.collection('users').findOne({ email: req.session.userEmail }, { projection: { theme: 1 } });
+    const theme = (user && user.theme === 'dark') ? 'dark' : 'light';
+    return res.json({ success: true, theme });
+  } catch (e) {
+    console.error('GET /api/theme error:', e);
+    return res.status(500).json({ success: false, message: 'Failed to load theme' });
+  }
+});
+
+app.post('/api/theme', async (req, res) => {
+  try {
+    const { theme } = req.body || {};
+    if (!req.session.userEmail) return res.status(401).json({ success: false, message: 'Not logged in' });
+    if (!['dark', 'light'].includes(theme)) return res.status(400).json({ success: false, message: 'Invalid theme value' });
+    const db = await connectDB();
+    await db.collection('users').updateOne({ email: req.session.userEmail }, { $set: { theme } });
+    return res.json({ success: true });
+  } catch (e) {
+    console.error('POST /api/theme error:', e);
+    return res.status(500).json({ success: false, message: 'Failed to save theme' });
+  }
+});
+
 
 
 // Chat history
