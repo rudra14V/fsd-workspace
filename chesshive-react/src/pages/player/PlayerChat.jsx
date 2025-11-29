@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import usePlayerTheme from '../../hooks/usePlayerTheme';
 
 // React version of views/player/player_chat.ejs
@@ -7,6 +8,7 @@ import usePlayerTheme from '../../hooks/usePlayerTheme';
 const SOCKET_IO_PATH = '/socket.io/socket.io.js';
 
 function PlayerChat() {
+  const navigate = useNavigate();
   const [isDark, toggleTheme] = usePlayerTheme();
   const [role, setRole] = useState('Player');
   const [username, setUsername] = useState('');
@@ -224,7 +226,7 @@ function PlayerChat() {
     h2: { fontFamily: 'Cinzel, serif', fontSize: '2.5rem', color: 'var(--sea-green)', marginBottom: '2rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' },
     label: { display: 'block', marginBottom: '0.5rem', color: 'var(--sea-green)', fontWeight: 'bold' },
     input: { width: '100%', padding: '0.8rem', marginBottom: '1rem', border: '2px solid var(--sea-green)', borderRadius: 8, fontFamily: 'Playfair Display, serif', background: 'var(--content-bg)', color: 'var(--text-color)' },
-    select: { width: '100%', padding: '0.8rem', marginBottom: '1rem', border: '2px solid var(--sea-green)', borderRadius: 8, fontFamily: 'Playfair Display, serif', background: 'var(--content-bg)', color: 'var(--text-color)' },
+    select: { width: '100%', padding: '0.8rem', marginBottom: '1rem', border: '2px solid var(--sea-green)', borderRadius: 8, fontFamily: 'Cinzel, serif', background: 'var(--content-bg)', color: 'var(--text-color)' },
     chatBox: { height: 400, border: '2px solid var(--border-color)', borderRadius: 8, padding: '1rem', margin: '1rem 0', overflowY: 'auto', background: 'var(--content-bg)' },
     msg: { marginBottom: '1rem', padding: '0.8rem', borderRadius: 8, maxWidth: '80%' },
     sent: { background: 'var(--sea-green)', color: 'var(--on-accent)', marginLeft: 'auto' },
@@ -236,10 +238,10 @@ function PlayerChat() {
   };
 
   return (
-    <div style={{ ...styles.root, padding: 0 }}>
-      <div style={{ display: 'flex', maxWidth: 1100, margin: '2rem auto', gap: '1rem' }}>
+    <div style={{ ...styles.root, padding: 0, height: '100vh' }}>
+      <div style={{ display: 'flex', width: '100%', height: '100%', gap: '1rem' }}>
         {/* Left pane: contacts and search */}
-        <div style={{ flex: '0 0 320px', background: 'var(--content-bg)', borderRadius: 12, padding: '1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', color: 'var(--text-color)' }}>
+        <div style={{ flex: '0 0 320px', background: 'var(--content-bg)', borderRadius: 12, padding: '1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', color: 'var(--text-color)', height: '100%', overflow: 'hidden' }}>
           <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
             <select style={{ flex: 1, ...styles.select }} value={role} onChange={(e) => setRole(e.target.value)} disabled={joined}>
               <option>Admin</option>
@@ -290,9 +292,10 @@ function PlayerChat() {
         </div>
 
         {/* Right pane: chat */}
-        <div style={{ flex: 1, background: 'var(--content-bg)', borderRadius: 12, padding: '1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', color: 'var(--text-color)' }}>
+        <div style={{ flex: 1, background: 'var(--content-bg)', borderRadius: 12, padding: '1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', color: 'var(--text-color)', height: '100%', display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <button onClick={() => navigate('/player/player_dashboard')} style={styles.button}>Back to Dashboard</button>
                 <h2 style={{ margin: 0, fontFamily: 'Cinzel, serif', color: 'var(--sea-green)' }}>{receiver === 'All' ? 'Global Chat' : receiver}</h2>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -301,7 +304,7 @@ function PlayerChat() {
               </div>
             </div>
 
-          <div id="chatBox" style={{ ...styles.chatBox, height: 480 }} ref={chatBoxRef}>
+          <div id="chatBox" style={{ ...styles.chatBox, flex: 1, height: 'auto', overflowY: 'auto' }} ref={chatBoxRef}>
             {messages.map((m, idx) => (
               <div key={idx} style={{ ...styles.msg, ...(m.type === 'sent' ? styles.sent : styles.received) }}>
                 <p style={{ margin: 0 }}><strong>{m.type === 'sent' ? 'You' : m.sender}:</strong> {m.text}</p>

@@ -178,29 +178,50 @@ function PlayerPairings() {
   }, [players]);
 
   const styles = {
-    root: { fontFamily: 'Playfair Display, serif', backgroundColor: '#FFFDD0', minHeight: '100vh', padding: '2rem' },
-    container: { maxWidth: 1000, margin: '0 auto' },
-    h1: { fontFamily: 'Cinzel, serif', fontSize: '3rem', color: '#2E8B57', marginBottom: '2rem', textAlign: 'center' },
-    h2: { fontFamily: 'Cinzel, serif', fontSize: '2.5rem', color: '#2E8B57', marginBottom: '2rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' },
-    pairingsContainer: { background: '#fff', borderRadius: 15, padding: '2rem', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', marginBottom: '2rem' },
-    table: { width: '100%', borderCollapse: 'collapse', marginBottom: '2rem' },
-    th: { backgroundColor: '#2E8B57', color: '#fff', padding: '1rem', textAlign: 'left', fontFamily: 'Cinzel, serif' },
-    td: { padding: '1rem', borderBottom: '1px solid rgba(46,139,87,0.2)' },
-    score: { color: '#2E8B57', fontWeight: 'bold' },
-    bye: { color: '#666', fontStyle: 'italic' },
-    navWrap: { textAlign: 'right', marginTop: '2rem' },
-    navLink: { display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: '#2E8B57', color: '#fff', textDecoration: 'none', padding: '0.8rem 1.5rem', borderRadius: 8, fontFamily: 'Cinzel, serif', fontWeight: 'bold' },
-    treeContainer: { background: '#fff', borderRadius: 15, padding: '2rem', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', marginTop: '2rem' },
+    root: { fontFamily: 'Playfair Display, serif', backgroundColor: 'var(--page-bg)', minHeight: '100vh', padding: '2rem', color: 'var(--text-color)' },
+    container: { maxWidth: 1100, margin: '0 auto' },
+    h1: { fontFamily: 'Cinzel, serif', fontSize: '2.6rem', color: 'var(--sky-blue)', marginBottom: '1.5rem', textAlign: 'center', letterSpacing: '.5px' },
+    h2: { fontFamily: 'Cinzel, serif', fontSize: '1.9rem', color: 'var(--sky-blue)', margin: '0 0 1.25rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '.75rem', letterSpacing: '.4px' },
+    pairingsContainer: { background: 'var(--panel-bg)', borderRadius: 16, padding: '1.75rem 1.75rem 1.5rem', boxShadow: '0 4px 20px rgba(0,0,0,0.35)', marginBottom: '2rem', border: '1px solid var(--border-color)' },
+    table: { width: '100%', borderCollapse: 'collapse', marginBottom: '1.25rem', fontFamily: 'Playfair Display, serif' },
+    th: { backgroundColor: 'var(--sea-green)', color: 'var(--on-accent)', padding: '.85rem .9rem', textAlign: 'left', fontFamily: 'Cinzel, serif', fontWeight: 600, fontSize: '.9rem', letterSpacing: '.4px' },
+    td: { padding: '.85rem .9rem', border: '1px solid var(--border-color)', fontSize: '.9rem' },
+    score: { color: 'var(--sea-green)', fontWeight: 600 },
+    bye: { color: 'var(--sea-green)', fontStyle: 'italic', fontSize: '.85rem' },
+    navWrap: { textAlign: 'right', marginTop: '2.25rem' },
+    navLink: { display: 'inline-flex', alignItems: 'center', gap: '.5rem', background: 'var(--sky-blue)', color: 'var(--on-accent)', textDecoration: 'none', padding: '.75rem 1.3rem', borderRadius: 10, fontFamily: 'Cinzel, serif', fontWeight: 600, letterSpacing: '.4px', boxShadow: '0 3px 12px rgba(0,0,0,0.4)' },
+    treeContainer: { background: 'var(--panel-bg)', borderRadius: 16, padding: '1.75rem', boxShadow: '0 4px 20px rgba(0,0,0,0.35)', marginTop: '2rem', border: '1px solid var(--border-color)' },
+    toggleBtn: { background: 'transparent', border: '2px solid var(--sea-green)', color: 'var(--sea-green)', padding: '8px 14px', borderRadius: 10, cursor: 'pointer', fontFamily: 'Cinzel, serif', fontWeight: 'bold', letterSpacing: '.5px' },
   };
 
   return (
     <div style={styles.root}>
+      {/* Local theme variables if not already defined globally */}
+      <style>{`
+        :root {
+          --page-bg:#050a12;
+          --content-bg:#0b1623;
+          --panel-bg:#0f1f30;
+          --sea-green:#62b5ac;
+          --sky-blue:#1e50ff;
+          --sky-blue-hover:#3465ff;
+          --on-accent:#ffffff;
+          --text-color:#e6f1ff;
+          --border-color:#1e50ff33;
+          --row-hover-bg:#11263a;
+          --yellow:#ffcc00;
+          --red:#ff4d4d;
+        }
+        .pairings-container table tbody tr:hover { background: var(--row-hover-bg); }
+        .pairings-container table tbody tr:nth-child(even){ background:#0d1e30; }
+        .pairings-title-icon { filter: drop-shadow(0 2px 4px rgba(0,0,0,.4)); }
+        .d3-node rect { transition: fill .3s; }
+        .d3-node:hover rect { fill: var(--sky-blue); }
+      `}</style>
       <div style={styles.container}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <h1 style={styles.h1}>Pairings & Results</h1>
-          <div>
-            <button onClick={toggleTheme} style={{ background: 'transparent', border: '2px solid var(--sea-green)', color: 'var(--sea-green)', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', fontFamily: 'Cinzel, serif', fontWeight: 'bold' }}>{isDark ? 'Switch to Light' : 'Switch to Dark'}</button>
-          </div>
+          <button onClick={toggleTheme} style={styles.toggleBtn}>{isDark ? 'Switch to Light' : 'Switch to Dark'}</button>
         </div>
 
         {loading && <p>Loading pairings...</p>}
@@ -211,7 +232,7 @@ function PlayerPairings() {
         )}
 
         {!loading && !error && allRounds.map((round) => (
-          <div key={round.round} style={styles.pairingsContainer}>
+          <div key={round.round} style={styles.pairingsContainer} className="pairings-container">
             <h2 style={styles.h2}><span role="img" aria-label="crossed-swords">⚔️</span> Round {round.round}</h2>
             <table style={styles.table}>
               <thead>
@@ -254,7 +275,7 @@ function PlayerPairings() {
 
         <div style={styles.navWrap}>
           <Link to="/player/player_tournament" style={styles.navLink}>
-            <i className="fas fa-users" aria-hidden="true"></i> <span>Back to Tournaments</span>
+            <i className="fas fa-arrow-left" aria-hidden="true"></i> <span>Back to Tournaments</span>
           </Link>
         </div>
       </div>

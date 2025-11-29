@@ -258,57 +258,80 @@ function PlayerTournament() {
   return (
     <div>
       <style>{`
-        :root { --sea-green:#2E8B57; --cream:#FFFDD0; --sky-blue:#87CEEB; --dark-green:#236B43; --red:#ff4d4d; --yellow:#ffcc00; }
+        :root {
+          --page-bg:#050a12;
+          --content-bg:#0b1623;
+          --panel-bg:#0f1f30;
+          --sea-green:#62b5ac; /* teal accent */
+          --sky-blue:#1e50ff; /* primary button / heading */
+          --sky-blue-hover:#3465ff;
+          --on-accent:#ffffff;
+          --text-color:#e6f1ff;
+          --border-color:#1e50ff33;
+          --row-hover-bg:#11263a;
+          --yellow:#ffcc00;
+          --red:#ff4d4d;
+        }
         *{ margin:0; padding:0; box-sizing:border-box; }
-        body,#root{ min-height:100vh; }
-        .content{ font-family:'Playfair Display', serif; background-color:var(--page-bg); min-height:100vh; padding:2rem; max-width:1200px; margin:0 auto; }
-        h1,h2{ font-family:'Cinzel', serif; color:var(--sea-green); margin-bottom:1rem; }
-        .black-h2{ color:var(--sea-green); font-family:'Cinzel', serif; margin-top:2rem; margin-bottom:0.5rem; }
-        .form-container{ background:var(--content-bg); padding:20px; border-radius:10px; box-shadow:0 0 15px rgba(0,0,0,0.1); margin-bottom:20px; overflow-x:auto; }
-        table{ width:100%; border-collapse:collapse; background:var(--content-bg); min-width:600px; }
-        th{ background:var(--sea-green); color:var(--on-accent); padding:12px; text-align:left; border-bottom:1px solid var(--border-color); }
-        td{ padding:12px; border:1px solid var(--border-color); color:var(--text-color); }
-        tbody tr:nth-child(even){ background: rgba(0,0,0,0.02); }
-        .player-dark tbody tr:nth-child(even){ background: rgba(255,255,255,0.03); }
+        html,body,#root{ height:100%; background:var(--page-bg); color:var(--text-color); }
+        .content{ font-family:'Playfair Display', serif; min-height:100vh; width:100vw; padding:2rem clamp(1rem,2vw,2rem); background:var(--page-bg); }
+        h1,h2{ font-family:'Cinzel', serif; color:var(--sky-blue); margin:0 0 1rem 0; letter-spacing:.5px; }
+        .black-h2{ color:var(--sky-blue); font-family:'Cinzel', serif; margin-top:2rem; margin-bottom:.75rem; }
+        .form-container{ background:var(--panel-bg); padding:20px; border-radius:14px; box-shadow:0 4px 24px rgba(0,0,0,0.4); margin-bottom:24px; overflow-x:auto; border:1px solid var(--border-color); }
+        table{ width:100%; border-collapse:collapse; background:var(--panel-bg); min-width:760px; font-family:'Playfair Display', serif; }
+        th{ background:var(--sea-green); color:var(--on-accent); padding:12px; text-align:left; font-weight:600; font-size:.9rem; letter-spacing:.5px; }
+        td{ padding:12px; border:1px solid var(--border-color); color:var(--text-color); font-size:.9rem; }
+        tbody tr:nth-child(even){ background:#0d1e30; }
         tr:hover{ background:var(--row-hover-bg); }
         .status-ongoing{ color:var(--yellow); font-weight:bold; }
         .status-yet-to-start{ color:var(--sea-green); font-weight:bold; }
-        .wallet-section{ background:var(--sea-green); color:var(--on-accent); padding:20px; border-radius:10px; text-align:center; margin-bottom:1.5rem; overflow:hidden; }
-        .wallet-section h3{ color:var(--on-accent); margin:0 0 1rem 0; }
-        .wallet-section form{ display:flex; flex-direction:column; gap:10px; max-width:300px; margin:0 auto; }
-        .wallet-section input[type='number']{ width:100%; padding:12px; border:2px solid var(--sea-green); border-radius:5px; font-size:16px; box-sizing:border-box; background:var(--content-bg); color:var(--text-color); outline:none; }
-        .wallet-section button{ background:var(--sky-blue); color:var(--sea-green); border:none; padding:12px 24px; border-radius:5px; cursor:pointer; font-weight:bold; transition:all 0.3s ease; font-family:'Cinzel', serif; text-align:center; width:100%; box-sizing:border-box; }
-        .wallet-section button:hover{ background:var(--sky-blue-hover); transform: translateY(-2px); }
-        .tournament-name{ cursor:pointer; color:var(--sea-green); font-weight:bold; }
-        .back-to-dashboard{ position:fixed; bottom:30px; right:30px; background:var(--sea-green); color:var(--on-accent); padding:10px 20px; border-radius:5px; text-decoration:none; box-shadow:0 2px 10px rgba(0,0,0,0.1); font-weight:bold; z-index:1000; }
-        button,.btn{ background:var(--sea-green); color:var(--on-accent); border:none; padding:10px 20px; border-radius:5px; cursor:pointer; transition:all 0.2s ease; font-family:'Playfair Display', serif; margin:5px 2px; text-decoration:none; display:inline-flex; align-items:center; gap:8px; }
-        .btn{ background:var(--sky-blue); color:var(--sea-green); font-family:'Cinzel', serif; font-weight:bold; }
-        button:hover{ filter: brightness(0.95); transform: translateY(-2px); }
-        .btn:hover{ background: var(--sky-blue-hover); transform: translateY(-2px); }
-        .back-to-dashboard:hover{ filter: brightness(0.95); transform: translateY(-2px); }
-        button[disabled]{ background:gray; cursor:not-allowed; opacity:0.7; }
-        .subscription-message{ background:var(--sky-blue); color:var(--sea-green); padding:15px; border-radius:5px; margin-bottom:20px; font-weight:bold; }
+        .wallet-section{ background:var(--sea-green); color:var(--on-accent); padding:24px 28px; border-radius:18px; text-align:center; margin-bottom:2rem; position:relative; overflow:hidden; }
+        .wallet-section::after{ content:""; position:absolute; inset:0; background:radial-gradient(circle at 30% 20%, rgba(255,255,255,0.15), transparent 70%); pointer-events:none; }
+        .wallet-section h3{ color:var(--on-accent); margin:0 0 1.25rem 0; font-family:'Cinzel', serif; font-size:1.1rem; }
+        .wallet-section form{ display:flex; flex-direction:column; gap:12px; max-width:340px; margin:0 auto; }
+        .wallet-section input[type='number']{ width:100%; padding:12px; border:2px solid var(--sky-blue); border-radius:10px; font-size:16px; background:#03101d; color:var(--text-color); outline:none; font-family:'Playfair Display', serif; }
+        .wallet-section input[type='number']:focus{ box-shadow:0 0 0 3px rgba(30,80,255,0.35); }
+        .wallet-section button{ background:var(--sky-blue); color:var(--on-accent); border:none; padding:14px 24px; border-radius:10px; cursor:pointer; font-weight:600; transition:background .25s, transform .25s; font-family:'Cinzel', serif; letter-spacing:.5px; }
+        .wallet-section button:hover{ background:var(--sky-blue-hover); transform:translateY(-2px); }
+        .back-to-dashboard{ position:fixed; bottom:30px; right:30px; background:var(--sea-green); color:var(--on-accent); padding:12px 24px; border-radius:10px; text-decoration:none; box-shadow:0 4px 18px rgba(0,0,0,0.4); font-weight:600; font-family:'Cinzel', serif; letter-spacing:.5px; }
+        .back-to-dashboard:hover{ filter:brightness(1.08); transform:translateY(-3px); }
+        button,.btn{ background:var(--sky-blue); color:var(--on-accent); border:none; padding:10px 18px; border-radius:10px; cursor:pointer; transition:background .25s, transform .25s; font-family:'Cinzel', serif; font-weight:600; letter-spacing:.4px; }
+        button:hover,.btn:hover{ background:var(--sky-blue-hover); transform:translateY(-2px); }
+        button[disabled]{ background:#3d4b60; cursor:not-allowed; opacity:.6; }
+        .subscription-message{ background:#102436; color:var(--sky-blue); padding:16px 20px; border-radius:12px; margin-bottom:26px; font-weight:600; font-family:'Playfair Display', serif; border:1px solid var(--border-color); }
         .subscription-message a{ color:var(--sea-green); text-decoration:underline; }
         .search-box{ margin-bottom:1rem; display:flex; gap:1rem; align-items:center; flex-wrap:wrap; }
-        .search-box input{ padding:0.6rem 1rem; width:100%; max-width:300px; border:2px solid var(--sea-green); border-radius:8px; font-size:1rem; transition:all 0.3s ease; font-family:'Playfair Display', serif; background:var(--content-bg); color:var(--text-color); outline:none; }
-        .search-box select{ padding:0.6rem 1rem; border:2px solid var(--sea-green); border-radius:8px; font-size:1rem; background:var(--content-bg); color:var(--text-color); font-family:'Cinzel', serif; cursor:pointer; transition:all 0.3s ease; }
-        .more-container{ text-align:center; margin:1rem 0; display:flex; justify-content:center; gap:1rem; }
-        .more,.hide{ display:inline-flex; align-items:center; gap:0.5rem; background:var(--sky-blue); color:var(--sea-green); text-decoration:none; padding:0.8rem 1.5rem; border-radius:8px; transition:all 0.3s ease; font-family:'Cinzel', serif; font-weight:bold; cursor:pointer; }
-        .more:hover,.hide:hover{ background:var(--sky-blue-hover); transform: translateY(-2px); }
-        .empty-message{ text-align:center; padding:2rem; color:var(--sea-green); font-style:italic; }
+        .search-box input{ padding:0.65rem 1rem; width:100%; max-width:320px; border:2px solid var(--sky-blue); border-radius:10px; font-size:.95rem; transition:all 0.25s ease; font-family:'Playfair Display', serif; background:#03101d; color:var(--text-color); outline:none; }
+        .search-box input:focus{ box-shadow:0 0 0 3px rgba(30,80,255,0.35); }
+        .search-box select{ padding:0.65rem 1rem; border:2px solid var(--sky-blue); border-radius:10px; font-size:.95rem; background:#03101d; color:var(--text-color); font-family:'Cinzel', serif; cursor:pointer; transition:all 0.25s ease; }
+        .more-container{ text-align:center; margin:1.25rem 0 1.75rem; display:flex; justify-content:center; gap:1rem; }
+        .more,.hide{ display:inline-flex; align-items:center; gap:0.6rem; background:var(--sky-blue); color:var(--on-accent); text-decoration:none; padding:0.85rem 1.6rem; border-radius:10px; transition:all 0.25s ease; font-family:'Cinzel', serif; font-weight:600; letter-spacing:.4px; }
+        .more:hover,.hide:hover{ background:var(--sky-blue-hover); transform:translateY(-2px); }
+        .empty-message{ text-align:center; padding:2.25rem; color:var(--sea-green); font-style:italic; font-family:'Playfair Display', serif; }
         .loading{ opacity:0.5; pointer-events:none; }
-        .enrolled-text{ color: var(--sky-blue); font-weight:bold; }
-        .join-form{ margin-top:8px; background: var(--page-bg); border:1px solid var(--border-color); padding:12px; border-radius:8px; }
-        .join-form label{ color: var(--text-color); font-weight:600; }
-        .join-form input{ background: var(--content-bg); color: var(--text-color); border:2px solid var(--sea-green); padding:8px; border-radius:6px; }
-        @media (max-width:768px){ .content{ padding:1rem; } .back-to-dashboard{ bottom:20px; right:20px; } .btn{ width:100%; justify-content:center; } table{ font-size:0.9rem; } .wallet-section form{ max-width:100%; } .wallet-section input[type='number'],.wallet-section button{ width:100%; } .more-container{ flex-direction:column; gap:0.5rem; } .search-box{ flex-direction:column; align-items:stretch; } .search-box input,.search-box select{ max-width:100%; } }
+        .enrolled-actions{ display:flex; flex-wrap:wrap; align-items:center; gap:0.6rem; }
+        .status-pill{ display:inline-block; padding:6px 14px; border-radius:18px; font-size:.7rem; letter-spacing:.4px; font-weight:700; font-family:'Cinzel', serif; box-shadow:0 2px 6px rgba(0,0,0,0.25); }
+        .status-pill.enrolled{ background:var(--sky-blue); color:var(--on-accent); }
+        .status-pill.pending{ background:var(--yellow); color:#000; }
+        .btn.small{ padding:8px 14px; font-size:.7rem; border-radius:8px; }
+        .join-form{ margin-top:10px; background:#03101d; border:1px solid var(--border-color); padding:14px; border-radius:10px; }
+        .join-form label{ color: var(--text-color); font-weight:600; font-size:.8rem; font-family:'Cinzel', serif; }
+        .join-form input{ background:#0d2538; color: var(--text-color); border:2px solid var(--sky-blue); padding:8px 10px; border-radius:8px; font-family:'Playfair Display', serif; margin-bottom:8px; }
+        .join-form input:focus{ box-shadow:0 0 0 3px rgba(30,80,255,0.35); }
+        @media (max-width:768px){
+          .content{ padding:1.25rem 1rem 4rem; width:100vw; }
+          table{ min-width:640px; }
+          .wallet-section{ padding:20px; }
+          .back-to-dashboard{ bottom:20px; right:20px; padding:10px 18px; }
+          .search-box input,.search-box select{ max-width:100%; }
+        }
       `}</style>
 
       <div className="content">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h1><i className="fas fa-trophy" /> Tournaments</h1>
           <div>
-            <button onClick={toggleTheme} style={{ background: 'transparent', border: '2px solid var(--sea-green)', color: 'var(--sea-green)', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', fontFamily: 'Cinzel, serif', fontWeight: 'bold' }}>{isDark ? 'Switch to Light' : 'Switch to Dark'}</button>
+            <button onClick={toggleTheme} style={{ background: 'transparent', border: '2px solid var(--sea-green)', color: 'var(--sea-green)', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', fontFamily: 'Cinzel, serif', fontWeight: 'bold', letterSpacing: '.5px' }}>{isDark ? 'Switch to Light' : 'Switch to Dark'}</button>
           </div>
         </div>
 
@@ -378,11 +401,11 @@ function PlayerTournament() {
                           </button>
                         </form>
                       ) : (
-                        <>
-                          <span className="enrolled-text">ENROLLED</span><br />
-                          <a href={`/player/pairings?tournament_id=${t._id}&rounds=5`} className="btn"><i className="fas fa-chess-board" /> View Pairings</a>
-                          <a href={`/player/rankings?tournament_id=${t._id}`} className="btn"><i className="fas fa-medal" /> Final Rankings</a>
-                        </>
+                        <div className="enrolled-actions">
+                          <span className="status-pill enrolled">ENROLLED</span>
+                          <a href={`/player/pairings?tournament_id=${t._id}&rounds=5`} className="btn small"><i className="fas fa-chess-board" /> Pairings</a>
+                          <a href={`/player/rankings?tournament_id=${t._id}`} className="btn small"><i className="fas fa-medal" /> Results</a>
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -461,25 +484,22 @@ function PlayerTournament() {
                           )}
                         </>
                       ) : (
-                        <>
+                        <div className="enrolled-actions">
                           {t.approved ? (
-                            <span className="enrolled-text">ENROLLED</span>
+                            <span className="status-pill enrolled">ENROLLED</span>
                           ) : (
-                            <span className="enrolled-text" style={{ color: 'var(--yellow)', fontWeight: 'bold' }}>PENDING APPROVAL</span>
+                            <span className="status-pill pending">PENDING</span>
                           )}
                           {t.needsApproval && (
-                            <div>
-                              <button className="approve-team-btn" onClick={() => approveTeamRequest(t.enrollmentId)} disabled={loading}>Approve</button>
-                            </div>
+                            <button className="btn small" onClick={() => approveTeamRequest(t.enrollmentId)} disabled={loading}>Approve</button>
                           )}
                           {t.approved && (
                             <>
-                              <br />
-                              <a href={`/player/pairings?tournament_id=${t._id}&rounds=5`} className="btn"><i className="fas fa-chess-board" /> View Pairings</a>
-                              <a href={`/player/rankings?tournament_id=${t._id}`} className="btn"><i className="fas fa-medal" /> Final Rankings</a>
+                              <a href={`/player/pairings?tournament_id=${t._id}&rounds=5`} className="btn small"><i className="fas fa-chess-board" /> Pairings</a>
+                              <a href={`/player/rankings?tournament_id=${t._id}`} className="btn small"><i className="fas fa-medal" /> Results</a>
                             </>
                           )}
-                        </>
+                        </div>
                       )}
                     </td>
                   </tr>
