@@ -146,6 +146,7 @@ function CoordinatorChat() {
           const q = usernameSearch.trim().toLowerCase();
           list = list.filter(u => (u.username || '').toLowerCase().includes(q));
         }
+        list = list.filter(u => ['coordinator','player'].includes((u.role || '').toLowerCase()));
         setRegisteredUsers(list);
       }
     } catch (e) {}
@@ -230,8 +231,6 @@ function CoordinatorChat() {
         <div style={{ flex: '0 0 320px', background: '#fff', borderRadius: 12, padding: '1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
           <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
             <select style={{ flex: 1, ...styles.select }} value={role} onChange={(e) => setRole(e.target.value)} disabled={joined}>
-              <option>Admin</option>
-              <option>Organizer</option>
               <option>Coordinator</option>
               <option>Player</option>
             </select>

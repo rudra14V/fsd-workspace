@@ -258,20 +258,7 @@ function PlayerTournament() {
   return (
     <div>
       <style>{`
-        :root {
-          --page-bg:#050a12;
-          --content-bg:#0b1623;
-          --panel-bg:#0f1f30;
-          --sea-green:#62b5ac; /* teal accent */
-          --sky-blue:#1e50ff; /* primary button / heading */
-          --sky-blue-hover:#3465ff;
-          --on-accent:#ffffff;
-          --text-color:#e6f1ff;
-          --border-color:#1e50ff33;
-          --row-hover-bg:#11263a;
-          --yellow:#ffcc00;
-          --red:#ff4d4d;
-        }
+        /* Use global CSS variables from index.css; do not override theme here. */
         *{ margin:0; padding:0; box-sizing:border-box; }
         html,body,#root{ height:100%; background:var(--page-bg); color:var(--text-color); }
         .content{ font-family:'Playfair Display', serif; min-height:100vh; width:100vw; padding:2rem clamp(1rem,2vw,2rem); background:var(--page-bg); }
@@ -281,7 +268,7 @@ function PlayerTournament() {
         table{ width:100%; border-collapse:collapse; background:var(--panel-bg); min-width:760px; font-family:'Playfair Display', serif; }
         th{ background:var(--sea-green); color:var(--on-accent); padding:12px; text-align:left; font-weight:600; font-size:.9rem; letter-spacing:.5px; }
         td{ padding:12px; border:1px solid var(--border-color); color:var(--text-color); font-size:.9rem; }
-        tbody tr:nth-child(even){ background:#0d1e30; }
+        tbody tr:nth-child(even){ background:var(--row-hover-bg); }
         tr:hover{ background:var(--row-hover-bg); }
         .status-ongoing{ color:var(--yellow); font-weight:bold; }
         .status-yet-to-start{ color:var(--sea-green); font-weight:bold; }

@@ -220,19 +220,19 @@ function PlayerChat() {
   };
 
   const styles = {
-    root: { fontFamily: 'Playfair Display, serif', backgroundColor: 'var(--page-bg)', minHeight: '100vh', padding: '2rem' },
+    root: { fontFamily: 'Playfair Display, serif', backgroundColor: 'var(--page-bg)', minHeight: '100vh', padding: '1rem' },
     container: { maxWidth: 1000, margin: '0 auto' },
-    card: { background: 'var(--content-bg)', borderRadius: 15, padding: '2rem', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', marginBottom: '2rem' },
+    card: { background: 'var(--content-bg)', borderRadius: 16, padding: '1rem', boxShadow: '0 6px 18px rgba(0,0,0,0.12)', marginBottom: '1rem' },
     h2: { fontFamily: 'Cinzel, serif', fontSize: '2.5rem', color: 'var(--sea-green)', marginBottom: '2rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' },
     label: { display: 'block', marginBottom: '0.5rem', color: 'var(--sea-green)', fontWeight: 'bold' },
-    input: { width: '100%', padding: '0.8rem', marginBottom: '1rem', border: '2px solid var(--sea-green)', borderRadius: 8, fontFamily: 'Playfair Display, serif', background: 'var(--content-bg)', color: 'var(--text-color)' },
-    select: { width: '100%', padding: '0.8rem', marginBottom: '1rem', border: '2px solid var(--sea-green)', borderRadius: 8, fontFamily: 'Cinzel, serif', background: 'var(--content-bg)', color: 'var(--text-color)' },
-    chatBox: { height: 400, border: '2px solid var(--border-color)', borderRadius: 8, padding: '1rem', margin: '1rem 0', overflowY: 'auto', background: 'var(--content-bg)' },
-    msg: { marginBottom: '1rem', padding: '0.8rem', borderRadius: 8, maxWidth: '80%' },
+    input: { width: '100%', padding: '0.75rem 0.9rem', marginBottom: '0.75rem', border: '2px solid var(--sea-green)', borderRadius: 10, fontFamily: 'Playfair Display, serif', background: 'var(--content-bg)', color: 'var(--text-color)' },
+    select: { width: '100%', padding: '0.75rem 0.9rem', marginBottom: '0.75rem', border: '2px solid var(--sea-green)', borderRadius: 10, fontFamily: 'Cinzel, serif', background: 'var(--content-bg)', color: 'var(--text-color)' },
+    chatBox: { height: 400, border: '2px solid var(--border-color)', borderRadius: 12, padding: '1rem', margin: '0.5rem 0 0.75rem 0', overflowY: 'auto', background: 'var(--content-bg)', scrollBehavior: 'smooth', overscrollBehavior: 'contain' },
+    msg: { margin: '0.4rem 0', padding: '0.9rem 1rem', borderRadius: 12, maxWidth: '78%', transition: 'transform 120ms ease, background 120ms ease' },
     sent: { background: 'var(--sea-green)', color: 'var(--on-accent)', marginLeft: 'auto' },
     received: { background: 'var(--sky-blue)', color: 'var(--sea-green)' },
-    chatInputRow: { display: 'flex', gap: '1rem', marginTop: '1rem' },
-    button: { background: 'var(--sea-green)', color: 'var(--on-accent)', border: 'none', padding: '0.8rem 1.5rem', borderRadius: 8, cursor: 'pointer', fontFamily: 'Cinzel, serif', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' },
+    chatInputRow: { display: 'flex', gap: '0.6rem', marginTop: '0.75rem' },
+    button: { background: 'var(--sea-green)', color: 'var(--on-accent)', border: 'none', padding: '0.7rem 1.2rem', borderRadius: 10, cursor: 'pointer', fontFamily: 'Cinzel, serif', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' },
     backRow: { textAlign: 'right' },
     backLink: { display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'var(--sea-green)', color: 'var(--on-accent)', textDecoration: 'none', padding: '0.8rem 1.5rem', borderRadius: 8, fontFamily: 'Cinzel, serif', fontWeight: 'bold' },
   };
@@ -241,14 +241,12 @@ function PlayerChat() {
     <div style={{ ...styles.root, padding: 0, height: '100vh' }}>
       <div style={{ display: 'flex', width: '100%', height: '100%', gap: '1rem' }}>
         {/* Left pane: contacts and search */}
-        <div style={{ flex: '0 0 320px', background: 'var(--content-bg)', borderRadius: 12, padding: '1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', color: 'var(--text-color)', height: '100%', overflow: 'hidden' }}>
+        <div style={{ flex: '0 0 320px', background: 'var(--content-bg)', borderRadius: 14, padding: '1rem', boxShadow: '0 6px 16px rgba(0,0,0,0.1)', color: 'var(--text-color)', height: '100%', overflow: 'hidden' }}>
           <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-            <select style={{ flex: 1, ...styles.select }} value={role} onChange={(e) => setRole(e.target.value)} disabled={joined}>
-              <option>Admin</option>
-              <option>Organizer</option>
-              <option>Coordinator</option>
-              <option>Player</option>
-            </select>
+              <select style={{ flex: 1, ...styles.select }} value={role} onChange={(e) => setRole(e.target.value)} disabled={joined}>
+                <option>Coordinator</option>
+                <option>Player</option>
+              </select>
             <input placeholder="username (optional)" value={usernameSearch} onChange={(e) => setUsernameSearch(e.target.value)} style={{ width: 160, padding: '0.6rem', borderRadius: 8, border: '1px solid #ddd' }} />
             <button style={{ ...styles.button, padding: '0.5rem 0.8rem' }} onClick={searchRegisteredUsers}>Search</button>
           </div>
@@ -261,7 +259,7 @@ function PlayerChat() {
 
           <div style={{ marginTop: '1rem' }}>
             <h4 style={{ margin: 0, marginBottom: '0.5rem', color: 'var(--sea-green)' }}>Contacts</h4>
-            <div style={{ maxHeight: 420, overflowY: 'auto', marginTop: '0.5rem' }}>
+            <div style={{ maxHeight: 420, overflowY: 'auto', marginTop: '0.5rem', scrollBehavior: 'smooth' }}>
               {contacts.length === 0 && <div style={{ color: 'var(--text-color)' }}>No contacts yet. Search users or send a message.</div>}
               {contacts.map(c => (
                 <div key={c.contact} onClick={() => { if (!joined) joinChat(); setReceiver(c.contact); }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem', borderBottom: '1px solid var(--border-color)', cursor: 'pointer' }}>
@@ -292,7 +290,7 @@ function PlayerChat() {
         </div>
 
         {/* Right pane: chat */}
-        <div style={{ flex: 1, background: 'var(--content-bg)', borderRadius: 12, padding: '1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', color: 'var(--text-color)', height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, background: 'var(--content-bg)', borderRadius: 14, padding: '1rem', boxShadow: '0 6px 16px rgba(0,0,0,0.1)', color: 'var(--text-color)', height: '100%', display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <button onClick={() => navigate('/player/player_dashboard')} style={styles.button}>Back to Dashboard</button>

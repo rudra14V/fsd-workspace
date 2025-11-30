@@ -196,24 +196,10 @@ function PlayerPairings() {
 
   return (
     <div style={styles.root}>
-      {/* Local theme variables if not already defined globally */}
+      {/* Use global theme variables from index.css; do not override locally */}
       <style>{`
-        :root {
-          --page-bg:#050a12;
-          --content-bg:#0b1623;
-          --panel-bg:#0f1f30;
-          --sea-green:#62b5ac;
-          --sky-blue:#1e50ff;
-          --sky-blue-hover:#3465ff;
-          --on-accent:#ffffff;
-          --text-color:#e6f1ff;
-          --border-color:#1e50ff33;
-          --row-hover-bg:#11263a;
-          --yellow:#ffcc00;
-          --red:#ff4d4d;
-        }
         .pairings-container table tbody tr:hover { background: var(--row-hover-bg); }
-        .pairings-container table tbody tr:nth-child(even){ background:#0d1e30; }
+        .pairings-container table tbody tr:nth-child(even){ background: var(--row-hover-bg); }
         .pairings-title-icon { filter: drop-shadow(0 2px 4px rgba(0,0,0,.4)); }
         .d3-node rect { transition: fill .3s; }
         .d3-node:hover rect { fill: var(--sky-blue); }
