@@ -46,6 +46,7 @@ export default function ContactUs(){
   const [success, setSuccess] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
   const [wordCount, setWordCount] = React.useState(0);
+  const [touched, setTouched] = React.useState({ name:false, email:false, message:false });
 
   React.useEffect(() => {
     document.body.classList.add('react-root-host');
@@ -150,13 +151,43 @@ export default function ContactUs(){
             <form id="contactForm" onSubmit={onSubmit}>
               <div>
                 <label htmlFor="name">Name</label>
-                <input type="text" id="name" name="name" required value={name} onChange={e=> setName(e.target.value)} />
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  required
+                  value={name}
+                  onChange={e=>{
+                    if(!touched.name) setTouched(s=>({...s,name:true}));
+                    const v = e.target.value;
+                    setName(v);
+                    const namePattern = /^[A-Za-z]+(?:[ -][A-Za-z]+)*$/;
+                    const err = !v.trim() ? 'Name is required.' : (!namePattern.test(v.trim()) ? 'Name should only contain letters, spaces, or hyphens.' : '');
+                    setErrors(prev=>({...prev, name: err }));
+                  }}
+                  onBlur={()=> setTouched(s=>({...s,name:true}))}
+                />
                 {errors.name && <div className="error" id="errorName">{errors.name}</div>}
               </div>
 
               <div>
                 <label htmlFor="email">Email</label>
-                <input type="email" id="email" name="email" required value={email} onChange={e=> setEmail(e.target.value)} />
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  required
+                  value={email}
+                  onChange={e=>{
+                    if(!touched.email) setTouched(s=>({...s,email:true}));
+                    const v = e.target.value;
+                    setEmail(v);
+                    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                    const err = !v.trim() ? 'Email is required.' : (!emailPattern.test(v.trim()) ? 'Please enter a valid email address.' : '');
+                    setErrors(prev=>({...prev, email: err }));
+                  }}
+                  onBlur={()=> setTouched(s=>({...s,email:true}))}
+                />
                 {errors.email && <div className="error" id="errorEmail">{errors.email}</div>}
               </div>
 

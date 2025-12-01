@@ -40,6 +40,7 @@ export default function Signup(){
   const [form, setForm] = React.useState({ name:"", email:"", dob:"", gender:"", college:"", phone:"", password:"", role:"", aicf_id:"", fide_id:"" });
   const [otp, setOtp] = React.useState("");
   const [errors, setErrors] = React.useState({});
+  const [touched, setTouched] = React.useState({ name:false, email:false, dob:false, gender:false, college:false, phone:false, password:false, role:false, aicf_id:false, fide_id:false, otp:false });
   const [serverMsg, setServerMsg] = React.useState({ type:"", text:"" });
   const dispatch = useDispatch();
   const auth = useSelector(state => state.auth);
@@ -57,7 +58,24 @@ export default function Signup(){
   function validatePassword(p){ return !!p && /^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/.test(p); }
   function validateRole(r){ return ['admin','organizer','coordinator','player'].includes(r); }
 
-  function setError(id, msg, bad){ setErrors(s=>({ ...s, [id]: msg })); }
+  function setError(id, msg){ setErrors(s=>({ ...s, [id]: msg })); }
+
+  function validateField(id, value){
+    switch(id){
+      case 'name': return validateName(value) ? '' : 'Valid full name is required (letters and single spaces only)';
+      case 'email': return validateEmail(value) ? '' : 'Valid email is required (lowercase only)';
+      case 'dob': return validateDob(value) ? '' : 'You must be at least 16 years old';
+      case 'gender': return validateGender(value) ? '' : 'Gender is required';
+      case 'college': return validateCollege(value) ? '' : 'College name must contain only letters, spaces, or apostrophes';
+      case 'phone': return validatePhone(value) ? '' : 'Valid 10-digit phone number is required';
+      case 'password': return validatePassword(value) ? '' : 'Password must be at least 8 characters with one uppercase, one lowercase, and one special character';
+      case 'role': return validateRole(value) ? '' : 'Valid role is required';
+      case 'aicf_id': return '';
+      case 'fide_id': return '';
+      case 'otp': return (!value || value.length !== 6) ? 'Please enter a valid 6-digit OTP' : '';
+      default: return '';
+    }
+  }
 
   function validateAll(){
     const e = {};
@@ -138,25 +156,37 @@ export default function Signup(){
               <>
                 <div>
                   <label htmlFor="name">Full Name</label>
-                  <input type="text" id="name" name="name" placeholder="Enter full name" required value={form.name} onChange={e=>{ setField('name', e.target.value); setError('name',''); }} />
+                  <input type="text" id="name" name="name" placeholder="Enter full name" required value={form.name}
+                    onChange={e=>{ if(!touched.name) setTouched(s=>({...s,name:true})); const v=e.target.value; setField('name', v); setError('name', validateField('name', v)); }}
+                    onBlur={()=> setTouched(s=>({...s,name:true}))}
+                  />
                   {errors.name && <span id="nameError" className="error">{errors.name}</span>}
                 </div>
 
                 <div>
                   <label htmlFor="email">Email ID</label>
-                  <input type="email" id="email" name="email" placeholder="Enter your email" required value={form.email} onChange={e=>{ setField('email', e.target.value); setError('email',''); }} />
+                  <input type="email" id="email" name="email" placeholder="Enter your email" required value={form.email}
+                    onChange={e=>{ if(!touched.email) setTouched(s=>({...s,email:true})); const v=e.target.value; setField('email', v); setError('email', validateField('email', v)); }}
+                    onBlur={()=> setTouched(s=>({...s,email:true}))}
+                  />
                   {errors.email && <span id="emailError" className="error">{errors.email}</span>}
                 </div>
 
                 <div>
                   <label htmlFor="dob">Date of Birth</label>
-                  <input type="date" id="dob" name="dob" required value={form.dob} onChange={e=>{ setField('dob', e.target.value); setError('dob',''); }} />
+                  <input type="date" id="dob" name="dob" required value={form.dob}
+                    onChange={e=>{ if(!touched.dob) setTouched(s=>({...s,dob:true})); const v=e.target.value; setField('dob', v); setError('dob', validateField('dob', v)); }}
+                    onBlur={()=> setTouched(s=>({...s,dob:true}))}
+                  />
                   {errors.dob && <span id="dobError" className="error">{errors.dob}</span>}
                 </div>
 
                 <div>
                   <label htmlFor="gender">Gender</label>
-                  <select id="gender" name="gender" required value={form.gender} onChange={e=>{ setField('gender', e.target.value); setError('gender',''); }}>
+                  <select id="gender" name="gender" required value={form.gender}
+                    onChange={e=>{ if(!touched.gender) setTouched(s=>({...s,gender:true})); const v=e.target.value; setField('gender', v); setError('gender', validateField('gender', v)); }}
+                    onBlur={()=> setTouched(s=>({...s,gender:true}))}
+                  >
                   <option value="" disabled>Select Gender</option>
                   <option value="male">Male</option>
                   <option value="female">Female</option>
@@ -167,25 +197,37 @@ export default function Signup(){
 
                 <div>
                   <label htmlFor="college">College Name</label>
-                  <input type="text" id="college" name="college" placeholder="Enter college name" required value={form.college} onChange={e=>{ setField('college', e.target.value); setError('college',''); }} />
+                  <input type="text" id="college" name="college" placeholder="Enter college name" required value={form.college}
+                    onChange={e=>{ if(!touched.college) setTouched(s=>({...s,college:true})); const v=e.target.value; setField('college', v); setError('college', validateField('college', v)); }}
+                    onBlur={()=> setTouched(s=>({...s,college:true}))}
+                  />
                   {errors.college && <span id="collegeError" className="error">{errors.college}</span>}
                 </div>
 
                 <div>
                   <label htmlFor="phone">Phone Number</label>
-                  <input type="text" id="phone" name="phone" placeholder="Enter phone number" required value={form.phone} onChange={e=>{ setField('phone', e.target.value); setError('phone',''); }} />
+                  <input type="text" id="phone" name="phone" placeholder="Enter phone number" required value={form.phone}
+                    onChange={e=>{ if(!touched.phone) setTouched(s=>({...s,phone:true})); const v=e.target.value.replace(/\D/g,'').slice(0,10); setField('phone', v); setError('phone', validateField('phone', v)); }}
+                    onBlur={()=> setTouched(s=>({...s,phone:true}))}
+                  />
                   {errors.phone && <span id="phoneError" className="error">{errors.phone}</span>}
                 </div>
 
                 <div>
                   <label htmlFor="password">Password</label>
-                  <input type="password" id="password" name="password" placeholder="Enter password" required value={form.password} onChange={e=>{ setField('password', e.target.value); setError('password',''); }} />
+                  <input type="password" id="password" name="password" placeholder="Enter password" required value={form.password}
+                    onChange={e=>{ if(!touched.password) setTouched(s=>({...s,password:true})); const v=e.target.value; setField('password', v); setError('password', validateField('password', v)); }}
+                    onBlur={()=> setTouched(s=>({...s,password:true}))}
+                  />
                   {errors.password && <span id="passwordError" className="error">{errors.password}</span>}
                 </div>
 
                 <div>
                   <label htmlFor="role">Select Role</label>
-                  <select id="role" name="role" required value={form.role} onChange={e=>{ setField('role', e.target.value); setError('role',''); }}>
+                  <select id="role" name="role" required value={form.role}
+                    onChange={e=>{ if(!touched.role) setTouched(s=>({...s,role:true})); const v=e.target.value; setField('role', v); setError('role', validateField('role', v)); }}
+                    onBlur={()=> setTouched(s=>({...s,role:true}))}
+                  >
                   <option value="" disabled>Select Role</option>
                   <option value="admin">Admin</option>
                   <option value="organizer">Organizer</option>
@@ -197,13 +239,19 @@ export default function Signup(){
 
                 <div>
                   <label htmlFor="aicf_id">AICF ID (Optional)</label>
-                  <input type="text" id="aicf_id" name="aicf_id" placeholder="Enter AICF ID" value={form.aicf_id} onChange={e=>{ setField('aicf_id', e.target.value); setError('aicf_id',''); }} />
+                  <input type="text" id="aicf_id" name="aicf_id" placeholder="Enter AICF ID" value={form.aicf_id}
+                    onChange={e=>{ if(!touched.aicf_id) setTouched(s=>({...s,aicf_id:true})); const v=e.target.value; setField('aicf_id', v); setError('aicf_id', validateField('aicf_id', v)); }}
+                    onBlur={()=> setTouched(s=>({...s,aicf_id:true}))}
+                  />
                   {errors.aicf_id && <span id="aicf_idError" className="error">{errors.aicf_id}</span>}
                 </div>
 
                 <div>
                   <label htmlFor="fide_id">FIDE ID (Optional)</label>
-                  <input type="text" id="fide_id" name="fide_id" placeholder="Enter FIDE ID" value={form.fide_id} onChange={e=>{ setField('fide_id', e.target.value); setError('fide_id',''); }} />
+                  <input type="text" id="fide_id" name="fide_id" placeholder="Enter FIDE ID" value={form.fide_id}
+                    onChange={e=>{ if(!touched.fide_id) setTouched(s=>({...s,fide_id:true})); const v=e.target.value; setField('fide_id', v); setError('fide_id', validateField('fide_id', v)); }}
+                    onBlur={()=> setTouched(s=>({...s,fide_id:true}))}
+                  />
                   {errors.fide_id && <span id="fide_idError" className="error">{errors.fide_id}</span>}
                 </div>
 
@@ -215,7 +263,12 @@ export default function Signup(){
               <>
                 <div>
                   <label htmlFor="otp">Enter OTP</label>
-                  <input type="text" id="otp" name="otp" placeholder="Enter 6-digit OTP" required value={otp} onChange={e=>setOtp(e.target.value)} maxLength="6" />
+                  <input type="text" id="otp" name="otp" placeholder="Enter 6-digit OTP" required value={otp}
+                    onChange={e=>{ if(!touched.otp) setTouched(s=>({...s,otp:true})); const v=e.target.value.replace(/\D/g,''); setOtp(v.slice(0,6)); setError('otp', validateField('otp', v)); }}
+                    onBlur={()=> setTouched(s=>({...s,otp:true}))}
+                    maxLength="6"
+                  />
+                  {errors.otp && <span id="otpError" className="error">{errors.otp}</span>}
                 </div>
                 <div className="full-width">
                   <button type="submit" disabled={auth.loading}>{auth.loading ? 'Verifying...' : 'Verify OTP'}</button>

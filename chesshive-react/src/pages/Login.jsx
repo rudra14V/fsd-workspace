@@ -13,6 +13,7 @@ main { flex:1; display:flex; justify-content:center; align-items:center; padding
 
 h2 { color:var(--text-dark); font-family:'Cinzel', serif; font-size:2.5rem; text-align:center; margin-bottom:2.5rem; text-shadow:2px 2px 4px rgba(0,0,0,0.1); }
 .error { background:rgba(198,40,40,0.1); color:#c62828; padding:1rem; border-radius:5px; margin-bottom:1rem; }
+.field-error { color:#c62828; font-size:.9rem; margin-top:.4rem; }
 .success { background:rgba(46,125,50,0.1); color:var(--text-dark); padding:1rem; border-radius:5px; margin-bottom:1rem; }
 form { display:flex; flex-direction:column; gap:1.8rem; }
 .restore-form { display:flex; flex-direction:column; gap:1rem; margin-top:1rem; padding:1rem; border:1px solid rgba(46,139,87,0.2); border-radius:8px; background:rgba(255,255,255,0.9); }
@@ -48,6 +49,7 @@ export default function Login(){
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [otp, setOtp] = React.useState("");
+  const [touched, setTouched] = React.useState({ email:false, password:false, otp:false });
   const [dynamicError, setDynamicError] = React.useState("");
   const [dynamicSuccess, setDynamicSuccess] = React.useState("");
   const dispatch = useDispatch();
@@ -92,6 +94,10 @@ export default function Login(){
   function validatePassword(val){
     return !!val && /^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/.test(val);
   }
+
+  const emailError = touched.email && !validateEmail(email) ? 'Valid lowercase email is required' : '';
+  const passwordError = touched.password && !validatePassword(password) ? 'Password must be at least 8 characters with one uppercase, one lowercase, and one special character' : '';
+  const otpError = touched.otp && (!!otp && otp.length !== 6 ? 'OTP must be 6 digits' : (!otp ? 'OTP is required' : ''));
 
   function showRestoreForm(deletedUserId, deletedUserRole){
     if (!deletedUserId || !deletedUserRole) return;
@@ -206,11 +212,31 @@ export default function Login(){
               <>
                 <div>
                   <label htmlFor="email">Email ID</label>
-                  <input type="email" id="email" name="email" required placeholder="Enter your email" value={email} onChange={e=>setEmail(e.target.value)} />
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    required
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={e=>{ if (!touched.email) setTouched(s=>({...s,email:true})); setEmail(e.target.value); }}
+                    onBlur={()=> setTouched(s=>({...s,email:true}))}
+                  />
+                  {emailError && <div className="field-error">{emailError}</div>}
                 </div>
                 <div>
                   <label htmlFor="password">Password</label>
-                  <input type="password" id="password" name="password" required placeholder="Enter your password" value={password} onChange={e=>setPassword(e.target.value)} />
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    required
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={e=>{ if (!touched.password) setTouched(s=>({...s,password:true})); setPassword(e.target.value); }}
+                    onBlur={()=> setTouched(s=>({...s,password:true}))}
+                  />
+                  {passwordError && <div className="field-error">{passwordError}</div>}
                 </div>
                 <button type="submit" disabled={auth.loading}>{auth.loading ? 'Sending OTP...' : 'Send OTP'}</button>
               </>
@@ -218,7 +244,18 @@ export default function Login(){
               <>
                 <div>
                   <label htmlFor="otp">Enter OTP</label>
-                  <input type="text" id="otp" name="otp" required placeholder="Enter 6-digit OTP" value={otp} onChange={e=>setOtp(e.target.value)} maxLength="6" />
+                  <input
+                    type="text"
+                    id="otp"
+                    name="otp"
+                    required
+                    placeholder="Enter 6-digit OTP"
+                    value={otp}
+                    onChange={e=>{ if (!touched.otp) setTouched(s=>({...s,otp:true})); setOtp(e.target.value.replace(/\D/g,'')); }}
+                    onBlur={()=> setTouched(s=>({...s,otp:true}))}
+                    maxLength="6"
+                  />
+                  {otpError && <div className="field-error">{otpError}</div>}
                 </div>
                 <button type="submit" disabled={auth.loading}>{auth.loading ? 'Verifying...' : 'Verify OTP'}</button>
                 <button type="button" onClick={() => { setDynamicSuccess(""); setDynamicError(""); dispatch({ type: 'auth/clearError' }); }}>Back</button>
