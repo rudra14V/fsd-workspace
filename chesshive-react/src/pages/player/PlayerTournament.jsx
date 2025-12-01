@@ -341,7 +341,18 @@ function PlayerTournament() {
           <span className="wallet-icon" role="img" aria-label="wallet">💰</span>
           <h3>Wallet Balance: ₹<span>{walletBalance}</span></h3>
           <form onSubmit={(e) => { e.preventDefault(); const amount = e.currentTarget.amount.value; if (!amount) return; addFunds(amount); e.currentTarget.reset(); }}>
-            <input type="number" name="amount" placeholder="Enter amount" min="1" required />
+            <input
+              type="number"
+              name="amount"
+              placeholder="Enter amount"
+              min="1"
+              required
+              style={{
+                backgroundColor: isDark ? '#000' : '#fff',
+                color: isDark ? '#fff' : '#000',
+                borderColor: isDark ? '#444' : '#ddd'
+              }}
+            />
             <input type="hidden" name="redirectTo" value="/player/player_tournament" />
             <button type="submit" disabled={loading}>Add Funds</button>
           </form>
@@ -350,8 +361,26 @@ function PlayerTournament() {
         {/* Individual Tournaments */}
         <h2 className="black-h2">Available Individual Tournaments</h2>
         <div className="search-box">
-          <input type="text" placeholder="Search individual tournaments..." value={searchIndividual} onChange={(e) => setSearchIndividual(e.target.value)} />
-          <select value={searchIndividualType} onChange={(e) => setSearchIndividualType(e.target.value)}>
+          <input
+            type="text"
+            placeholder="Search individual tournaments..."
+            value={searchIndividual}
+            onChange={(e) => setSearchIndividual(e.target.value)}
+            style={{
+              backgroundColor: isDark ? '#000' : '#fff',
+              color: isDark ? '#fff' : '#000',
+              borderColor: isDark ? '#444' : '#ddd'
+            }}
+          />
+          <select
+            value={searchIndividualType}
+            onChange={(e) => setSearchIndividualType(e.target.value)}
+            style={{
+              backgroundColor: isDark ? '#000' : '#fff',
+              color: isDark ? '#fff' : '#000',
+              borderColor: isDark ? '#444' : '#ddd'
+            }}
+          >
             <option value="name">Name</option>
             <option value="location">Location</option>
             <option value="status">Status</option>
@@ -417,8 +446,26 @@ function PlayerTournament() {
         {/* Team Tournaments */}
         <h2 className="black-h2">Available Team Tournaments</h2>
         <div className="search-box">
-          <input type="text" placeholder="Search team tournaments..." value={searchTeam} onChange={(e) => setSearchTeam(e.target.value)} />
-          <select value={searchTeamType} onChange={(e) => setSearchTeamType(e.target.value)}>
+          <input
+            type="text"
+            placeholder="Search team tournaments..."
+            value={searchTeam}
+            onChange={(e) => setSearchTeam(e.target.value)}
+            style={{
+              backgroundColor: isDark ? '#000' : '#fff',
+              color: isDark ? '#fff' : '#000',
+              borderColor: isDark ? '#444' : '#ddd'
+            }}
+          />
+          <select
+            value={searchTeamType}
+            onChange={(e) => setSearchTeamType(e.target.value)}
+            style={{
+              backgroundColor: isDark ? '#000' : '#fff',
+              color: isDark ? '#fff' : '#000',
+              borderColor: isDark ? '#444' : '#ddd'
+            }}
+          >
             <option value="name">Name</option>
             <option value="location">Location</option>
             <option value="status">Status</option>
