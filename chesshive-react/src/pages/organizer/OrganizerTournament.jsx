@@ -29,11 +29,42 @@ const OrganizerTournament = () => {
     setError('');
     try {
       const res = await fetch('/organizer/api/tournaments', { credentials: 'include' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setTournaments(Array.isArray(data?.tournaments) ? data.tournaments : []);
+      if (!res.ok) {
+        if (res.status === 403) {
+          setError('Unauthorized. Please login as an organizer.');
+          return;
+        }
+        const text = await res.text().catch(() => '');
+        throw new Error(`HTTP ${res.status} ${text}`);
+      }
+      const data = await res.json().catch(() => ({}));
+      const raw = Array.isArray(data?.tournaments) ? data.tournaments : [];
+      // Normalize fields (accept both snake_case and camelCase or legacy keys)
+      const normalized = raw.map((t) => {
+        const name = t.name ?? t.tournamentName ?? '';
+        const date = t.date ?? t.tournamentDate ?? null;
+        const location = t.location ?? t.tournamentLocation ?? '';
+        const entry_fee = (t.entry_fee ?? t.entryFee ?? t.fee ?? 0);
+        const type = t.type ?? t.format ?? '';
+        const added_by = t.added_by ?? t.addedBy ?? t.coordinator ?? '';
+        const approved_by = t.approved_by ?? t.approvedBy ?? '';
+        const status = t.status ?? 'Pending';
+        return {
+          _id: t._id || t.id || `${name}-${date}-${location}`,
+          name,
+          date,
+          location,
+          entry_fee,
+          type,
+          added_by,
+          approved_by,
+          status,
+        };
+      });
+      setTournaments(normalized);
       setVisibleCount(5);
     } catch (e) {
+      console.error('Tournaments load error:', e);
       setError('Failed to load tournaments.');
     } finally {
       setLoading(false);

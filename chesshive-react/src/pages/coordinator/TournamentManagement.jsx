@@ -425,16 +425,20 @@ function TournamentManagement() {
                           <button style={styles.removeBtn} onClick={() => onRemove(t._id)}>
                             <i className="fas fa-trash" aria-hidden="true"></i> Remove
                           </button>
-                          {status === 'Completed' && (
+                          {status === 'Completed' ? (
                             t.feedback_requested ? (
                               <a href={`/coordinator/feedback_view?tournament_id=${t._id}`} target="_blank" rel="noreferrer" style={styles.actionBtn}>
                                 <i className="fas fa-eye" aria-hidden="true"></i> View Feedback
                               </a>
                             ) : (
                               <button style={styles.actionBtn} onClick={() => requestFeedback(t._id)}>
-                                <i className="fas fa-comment-dots" aria-hidden="true"></i> Ask Feedback
+                                <i className="fas fa-paper-plane" aria-hidden="true"></i> Send Feedback Form
                               </button>
                             )
+                          ) : (
+                            <button style={{ ...styles.actionBtn, opacity: 0.6, cursor: 'not-allowed' }} title="Available after completion" disabled>
+                              <i className="fas fa-paper-plane" aria-hidden="true"></i> Send Feedback Form
+                            </button>
                           )}
                         </td>
                       </tr>
