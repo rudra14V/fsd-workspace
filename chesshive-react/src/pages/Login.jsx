@@ -53,6 +53,7 @@ export default function Login(){
   const dispatch = useDispatch();
   const auth = useSelector(state => state.auth);
   const authError = auth.error;
+  const restoreInfo = auth.restoreInfo;
   const [restoreVisibility, setRestoreVisibility] = React.useState({ coordinator:false, organizer:false, player:false });
   const [restoreIds, setRestoreIds] = React.useState({ coordinator:"", organizer:"", player:"" });
   const [restoring, setRestoring] = React.useState({ coordinator:false, organizer:false, player:false });
@@ -67,26 +68,20 @@ export default function Login(){
     if (authError) setDynamicError(authError);
   }, [authError]);
 
-  // URL params handling (error/success and restore)
+  // If backend signals restoreRequired via Redux, show the form
+  React.useEffect(() => {
+    if (restoreInfo && restoreInfo.userId && restoreInfo.role) {
+      showRestoreForm(restoreInfo.userId, restoreInfo.role);
+    }
+  }, [restoreInfo]);
+
+  // URL params handling (error/success)
   React.useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const errorMessage = urlParams.get('error-message');
     const successMessage = urlParams.get('success-message');
-    const deletedUserId = urlParams.get('deletedUserId');
-    const deletedUserRole = urlParams.get('deletedUserRole');
-    const deletedBy = urlParams.get('deletedBy');
-
-    if (errorMessage) {
-      setDynamicError(decodeURIComponent(errorMessage));
-      if (errorMessage.includes('Account has been deleted') && deletedUserId && deletedUserRole && deletedBy) {
-        getSessionEmail().then(sessionEmail => {
-          showRestoreForm(deletedUserId, deletedUserRole, deletedBy, sessionEmail);
-        });
-      }
-    } else if (successMessage) {
-      setDynamicSuccess(decodeURIComponent(successMessage));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (errorMessage) setDynamicError(decodeURIComponent(errorMessage));
+    else if (successMessage) setDynamicSuccess(decodeURIComponent(successMessage));
   }, []);
 
   function validateEmail(val){
@@ -98,18 +93,8 @@ export default function Login(){
     return !!val && /^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/.test(val);
   }
 
-  async function getSessionEmail(){
-    try {
-      const res = await fetch('/api/session', { method:'GET', headers:{'Content-Type':'application/json'} });
-      const data = await res.json();
-      return data.userEmail || null;
-    } catch(e){ console.error('Error fetching session email:', e); return null; }
-  }
-
-  function showRestoreForm(deletedUserId, deletedUserRole, deletedBy, sessionEmail){
-    if (!deletedUserId || !deletedUserRole || !deletedBy || !sessionEmail) return;
-    if (sessionEmail !== deletedBy) return;
-
+  function showRestoreForm(deletedUserId, deletedUserRole){
+    if (!deletedUserId || !deletedUserRole) return;
     if (deletedUserRole === 'coordinator'){
       setRestoreVisibility(s=>({...s, coordinator:true}));
       setRestoreIds(s=>({...s, coordinator:deletedUserId}));
@@ -134,6 +119,9 @@ export default function Login(){
       } else {
         const err = result.payload || result.error || {};
         setDynamicError(err.message || 'Login failed');
+        if (err.restoreRequired && err.deletedUserId && err.deletedUserRole) {
+          showRestoreForm(err.deletedUserId, err.deletedUserRole);
+        }
       }
     } catch(err){
       console.error('Login error:', err);
@@ -163,22 +151,17 @@ export default function Login(){
 
 
   async function onRestore(roleKey, emailId, passVal){
-    const map = { coordinator:'coordinators', organizer:'organizers', player:'players' };
-    const role = map[roleKey];
     const id = restoreIds[roleKey];
-    if (!role || !id) return;
+    if (!id) return;
     setRestoring(s=>({...s, [roleKey]:true}));
     try {
-      const formData = new FormData();
-      formData.append('id', id);
-      formData.append('email', emailId);
-      formData.append('password', passVal);
-      const url = `http://localhost:3000/${role}/restore/${id}`;
-      const resp = await fetch(url, { method:'POST', body: formData, headers: { 'Accept':'application/json' } });
-      let data;
-      if (!resp.ok) { data = { message: await resp.text() }; }
-      else { data = await resp.json(); }
-      if (!resp.ok) {
+      const resp = await fetch('http://localhost:3000/api/restore-account', {
+        method:'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({ id, email: emailId, password: passVal })
+      });
+      const data = await resp.json().catch(()=>({}));
+      if (!resp.ok || !data.success) {
         setDynamicError(data.message || 'Failed to restore account');
       } else {
         setDynamicSuccess(data.message || 'Account restored');

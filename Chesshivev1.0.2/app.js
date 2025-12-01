@@ -72,7 +72,15 @@ app.post('/api/login', async (req, res) => {
     const db = await connectDB();
     const user = await db.collection('users').findOne({ email, password });
     if (!user) return res.status(400).json({ success: false, message: 'Invalid credentials' });
-    if (user.isDeleted) return res.status(403).json({ success: false, message: 'Account has been deleted', deletedUserId: user._id.toString(), deletedUserRole: user.role, deleted_by: user.deleted_by || null, sessionEmail: email });
+    if (user.isDeleted) {
+      return res.status(403).json({
+        success: false,
+        message: 'Account has been deleted',
+        restoreRequired: true,
+        deletedUserId: user._id.toString(),
+        deletedUserRole: user.role || null
+      });
+    }
 
     // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
@@ -151,6 +159,38 @@ app.post('/api/login', async (req, res) => {
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ success: false, message: 'An unexpected error occurred' });
+  }
+});
+
+// Restore deleted account
+app.post('/api/restore-account', async (req, res) => {
+  try {
+    const { id, email, password } = req.body || {};
+    if (!id || !email || !password) {
+      return res.status(400).json({ success: false, message: 'id, email and password are required' });
+    }
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid user id' });
+    }
+    const db = await connectDB();
+    const user = await db.collection('users').findOne({ _id: new ObjectId(id), email, password });
+    if (!user) {
+      return res.status(400).json({ success: false, message: 'User not found or invalid credentials' });
+    }
+    if (!user.isDeleted) {
+      return res.status(400).json({ success: false, message: 'Account is already active' });
+    }
+    const upd = await db.collection('users').updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { isDeleted: 0, restored_date: new Date(), restored_by: email }, $unset: { deleted_date: '', deleted_by: '' } }
+    );
+    if (upd.modifiedCount === 0) {
+      return res.status(500).json({ success: false, message: 'Failed to restore account' });
+    }
+    return res.json({ success: true, message: 'Account restored successfully. Please login again to continue.' });
+  } catch (err) {
+    console.error('Restore account error:', err);
+    return res.status(500).json({ success: false, message: 'Unexpected server error' });
   }
 });
 

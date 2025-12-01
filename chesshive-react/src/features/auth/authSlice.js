@@ -84,6 +84,7 @@ const initialState = {
 	previewUrl: null,
 	redirectUrl: null,
 	error: null,
+	restoreInfo: null,
 };
 
 const authSlice = createSlice({
@@ -110,7 +111,19 @@ const authSlice = createSlice({
 					s.previewUrl = a.payload.previewUrl || null;
 				}
 			})
-			.addCase(login.rejected, (s, a) => { s.loading = false; s.error = a.payload?.message || a.error?.message; })
+			.addCase(login.rejected, (s, a) => {
+				s.loading = false;
+				s.error = a.payload?.message || a.error?.message;
+				if (a.payload && a.payload.restoreRequired) {
+					s.restoreInfo = {
+						userId: a.payload.deletedUserId,
+						role: a.payload.deletedUserRole,
+						message: a.payload.message || 'Account deleted'
+					};
+				} else {
+					s.restoreInfo = null;
+				}
+			})
 
 			.addCase(verifyLoginOtp.pending, (s) => { s.loading = true; s.error = null; })
 			.addCase(verifyLoginOtp.fulfilled, (s, a) => {
