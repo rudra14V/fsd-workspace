@@ -100,13 +100,14 @@ export default function ContactUs(){
     if (!validate()){ setSubmitting(false); return; }
 
     try {
-      const res = await fetch('/api/contactus', {
+      const res = await fetch('http://localhost:3000/api/contactus', {
         method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name: name.trim(), email: email.trim(), message: message.trim() })
       });
-      const data = await res.json();
+      const data = await res.json().catch(()=>({ success:false, message:'Unexpected response' }));
       if (res.ok && data.success){
         setSuccess(data.message || 'Message sent successfully!');
         setName(""); setEmail(""); setMessage("");
+        setWordCount(0);
         setTimeout(()=> setSuccess(""), 5000);
       } else {
         setSuccess(data.message || 'Failed to send message.');

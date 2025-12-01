@@ -290,6 +290,35 @@ router.post('/contactus', async (req, res) => {
   res.redirect('/contactus?success-message=Message sent successfully!');
 });
 
+// JSON Contact Us endpoint for React frontend
+router.post('/api/contactus', async (req, res) => {
+  try {
+    const { name, email, message } = req.body || {};
+    let errors = {};
+    if (!name || !/^[A-Za-z]+(?: [A-Za-z]+)*$/.test(name)) {
+      errors.name = 'Name should only contain letters';
+    }
+    if (!email || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+    if (!message || message.trim() === '') {
+      errors.message = 'Message cannot be empty';
+    } else {
+      const wordCount = message.trim().split(/\s+/).length;
+      if (wordCount > 200) errors.message = 'Message cannot exceed 200 words';
+    }
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({ success: false, message: 'Validation failed', errors });
+    }
+    const db = await connectDB();
+    await db.collection('contact').insertOne({ name, email, message, submission_date: new Date() });
+    return res.json({ success: true, message: 'Message sent successfully!' });
+  } catch (e) {
+    console.error('API /api/contactus error:', e);
+    return res.status(500).json({ success: false, message: 'Failed to send message.' });
+  }
+});
+
 router.post('/player/add-funds', async (req, res) => {
   console.log('Add funds request body:', req.body); // Debug log
   if (!req.session.userEmail) {
