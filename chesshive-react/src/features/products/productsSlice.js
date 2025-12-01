@@ -21,7 +21,19 @@ export const addProduct = createAsyncThunk('products/addProduct', async (payload
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        // canonical
+        name: payload.name,
+        category: payload.category,
+        price: payload.price,
+        imageUrl: payload.imageUrl,
+        availability: payload.availability,
+        // legacy/alternate keys for backend flexibility
+        productName: payload.name,
+        productCategory: payload.category,
+        image_url: payload.imageUrl,
+        stock: payload.availability,
+      }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) return thunkAPI.rejectWithValue(data);

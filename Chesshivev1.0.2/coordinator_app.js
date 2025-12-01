@@ -358,13 +358,29 @@ router.get('/api/store/products', async (req, res) => {
 
 router.post('/api/store/addproducts', async (req, res) => {
   try {
-    const { productName, productCategory, price, imageUrl, availability } = req.body;
-    console.log('POST body received:', req.body);
+    // Accept both camelCase and legacy names from frontend
+    const productName = (req.body.productName ?? req.body.name ?? '').toString();
+    const productCategory = (req.body.productCategory ?? req.body.category ?? '').toString();
+    const price = req.body.price; // numeric string or number
+    const imageUrl = (req.body.imageUrl ?? req.body.image_url ?? '').toString();
+    const availability = (req.body.availability !== undefined ? req.body.availability : req.body.stock);
+
+    console.log('POST body received (normalized):', { productName, productCategory, price, imageUrl, availability });
+    console.log('Raw body:', req.body);
     console.log('Session data:', { userEmail: req.session.userEmail, userCollege: req.session.userCollege, collegeName: req.session.collegeName });
 
-    if (!productName || !productCategory || !price || !imageUrl || availability === undefined) {
+    // Basic validation
+    if (!productName || !productCategory || price === undefined || price === '' || !imageUrl || availability === undefined) {
       console.log('Validation failed: Missing fields');
       return res.status(400).json({ success: false, message: 'All fields are required' });
+    }
+    const priceNum = parseFloat(price);
+    const availNum = parseInt(availability);
+    if (isNaN(priceNum) || priceNum < 0) {
+      return res.status(400).json({ success: false, message: 'Invalid price value' });
+    }
+    if (isNaN(availNum) || availNum < 0) {
+      return res.status(400).json({ success: false, message: 'Invalid availability value' });
     }
 
     const db = await connectDB();
@@ -385,11 +401,11 @@ router.post('/api/store/addproducts', async (req, res) => {
     }
 
     const product = {
-      name: productName.toString(),
-      category: productCategory.toString(),
-      price: parseFloat(price),
-      image_url: imageUrl.toString(),
-      availability: parseInt(availability) || 0,
+      name: productName.trim(),
+      category: productCategory.trim(),
+      price: priceNum,
+      image_url: imageUrl.trim(),
+      availability: availNum || 0,
       college: college.toString(),
       coordinator: username.toString(),
       added_date: new Date()
