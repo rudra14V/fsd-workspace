@@ -27,6 +27,7 @@ button{ background-color:var(--sea-green); color:var(--cream); padding:1rem 2rem
 button:hover{ background-color:#236b43; transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,0,0,0.15); }
 .error{ color:#dc3545; font-size:.9rem; margin-top:.3rem; }
 .success-message{ background:rgba(46,139,87,0.1); color:var(--sea-green); padding:1rem; border-radius:8px; text-align:center; margin-top:1rem; }
+.word-counter{ text-align:right; font-size:.9rem; margin-top:.25rem; color:var(--sea-green); }
 footer{ background-color:var(--sea-green); color:var(--cream); padding:1.5rem 2rem; }
 .footer-content{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; }
 .footer-content p{ color:var(--cream) !important; margin:0; font-size:1rem; display:flex; align-items:center; gap:.4rem; }
@@ -37,12 +38,14 @@ footer{ background-color:var(--sea-green); color:var(--cream); padding:1.5rem 2r
 `;
 
 export default function ContactUs(){
+  const MAX_WORDS = 200;
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [message, setMessage] = React.useState("");
   const [errors, setErrors] = React.useState({ name:"", email:"", message:"" });
   const [success, setSuccess] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
+  const [wordCount, setWordCount] = React.useState(0);
 
   React.useEffect(() => {
     document.body.classList.add('react-root-host');
@@ -71,9 +74,20 @@ export default function ContactUs(){
     else if (!emailPattern.test(emailTrim)) e.email = 'Please enter a valid email address.';
     const words = (messageTrim.match(/\b\w+\b/g) || []);
     if (!messageTrim) e.message = 'Message cannot be empty.';
-    else if (words.length > 200) e.message = 'Message cannot exceed 200 words.';
+    else if (words.length > MAX_WORDS) e.message = `Message cannot exceed ${MAX_WORDS} words.`;
     setErrors(e);
     return !e.name && !e.email && !e.message;
+  }
+
+  function handleMessageChange(e){
+    const val = e.target.value;
+    const wc = (val.trim().match(/\b\w+\b/g) || []).length;
+    setWordCount(wc);
+    setMessage(val);
+    setErrors(prev => ({
+      ...prev,
+      message: wc > MAX_WORDS ? `Message cannot exceed ${MAX_WORDS} words.` : ""
+    }));
   }
 
   async function onSubmit(e){
@@ -147,11 +161,14 @@ export default function ContactUs(){
 
               <div>
                 <label htmlFor="message">Message</label>
-                <textarea id="message" name="message" required value={message} onChange={e=> setMessage(e.target.value)} />
+                <textarea id="message" name="message" required value={message} onChange={handleMessageChange} />
+                <div className="word-counter" style={{ color: wordCount > MAX_WORDS ? '#dc3545' : undefined }}>
+                  Words: {wordCount}/{MAX_WORDS}
+                </div>
                 {errors.message && <div className="error" id="errorMessage">{errors.message}</div>}
               </div>
 
-              <button type="submit" disabled={submitting}>{submitting ? 'Sending...' : 'Send Message'}</button>
+              <button type="submit" disabled={submitting || wordCount > MAX_WORDS}>{submitting ? 'Sending...' : 'Send Message'}</button>
             </form>
 
             {success && (
