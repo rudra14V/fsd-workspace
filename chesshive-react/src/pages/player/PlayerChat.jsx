@@ -243,7 +243,7 @@ function PlayerChat() {
         {/* Left pane: contacts and search */}
         <div style={{ flex: '0 0 320px', background: 'var(--content-bg)', borderRadius: 14, padding: '1rem', boxShadow: '0 6px 16px rgba(0,0,0,0.1)', color: 'var(--text-color)', height: '100%', overflow: 'hidden' }}>
           <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-              <select style={{ flex: 1, ...styles.select }} value={role} onChange={(e) => setRole(e.target.value)} disabled={joined}>
+              <select style={{ flex: 1, ...styles.select }} value={role} onChange={(e) => setRole(e.target.value)}>
                 <option>Coordinator</option>
                 <option>Player</option>
               </select>
