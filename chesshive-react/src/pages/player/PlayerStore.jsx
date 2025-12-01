@@ -84,8 +84,11 @@ function PlayerStore() {
   };
 
   const buyProduct = async (product) => {
+    // Use discounted price if subscription applies (to match displayed price)
+    const discount = discountPercentage > 0 ? (product.price * discountPercentage) / 100 : 0;
+    const finalPrice = Number((product.price - discount).toFixed(2));
     const payload = {
-      price: product.price,
+      price: finalPrice,
       buyer: playerName,
       college: playerCollege,
       productId: product._id,
@@ -98,6 +101,9 @@ function PlayerStore() {
         body: JSON.stringify(payload),
       });
       const data = await res.json();
+      if (data.success && typeof data.walletBalance === 'number') {
+        setWalletBalance(data.walletBalance);
+      }
       alert(data.message || 'Purchase successful!');
       loadStore();
     } catch (err) {

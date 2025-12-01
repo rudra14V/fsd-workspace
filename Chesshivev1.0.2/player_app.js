@@ -212,77 +212,6 @@ router.get('/api/tournaments', async (req, res) => {
   }
 });
 
-// New API endpoint to join an individual tournament
-router.post('/api/join-individual', async (req, res) => {
-  if (!req.session.username || !req.session.userEmail) {
-    return res.status(401).json({ error: 'Please log in' });
-  }
-
-  const { tournamentId } = req.body;
-  if (!tournamentId) {
-    return res.status(400).json({ error: 'Tournament ID is required' });
-  }
-
-  try {
-    const db = await connectDB();
-    const username = req.session.username;
-    const user = await db.collection('users').findOne({ name: username, role: 'player', isDeleted: 0 });
-    if (!user) {
-      return res.status(404).json({ error: 'Player not found' });
-    }
-
-    const tournament = await db.collection('tournaments').findOne({ _id: new ObjectId(tournamentId), status: 'Approved' });
-    if (!tournament) {
-      return res.status(404).json({ error: 'Tournament not found or not approved' });
-    }
-
-    // Check if already enrolled
-    const existingEnrollment = await db.collection('tournament_players').findOne({
-      tournament_id: new ObjectId(tournamentId),
-      username
-    });
-    if (existingEnrollment) {
-      return res.status(400).json({ error: 'Already enrolled in this tournament' });
-    }
-
-    // Check wallet balance
-    const balance = await db.collection('user_balances').findOne({ user_id: user._id });
-    const walletBalance = balance?.wallet_balance || 0;
-    if (walletBalance < tournament.entry_fee) {
-      return res.status(400).json({ error: 'Insufficient wallet balance' });
-    }
-
-    // Check subscription
-    const subscription = await db.collection('subscriptionstable').findOne({ username: req.session.userEmail });
-    const subscribed = subscription && new Date(subscription.end_date) > new Date();
-    if (!subscribed) {
-      return res.status(403).json({ error: 'Active subscription required to join tournaments' });
-    }
-
-    // Deduct entry fee
-    await db.collection('user_balances').updateOne(
-      { user_id: user._id },
-      { $inc: { wallet_balance: -tournament.entry_fee } },
-      { upsert: true }
-    );
-
-    // Enroll player
-    await db.collection('tournament_players').insertOne({
-      tournament_id: new ObjectId(tournamentId),
-      username,
-      college: user.college,
-      gender: user.gender || 'Unknown',
-      enrollment_date: new Date()
-    });
-
-    const newBalance = (await db.collection('user_balances').findOne({ user_id: user._id })).wallet_balance || 0;
-    res.json({ success: true, message: 'Successfully joined the tournament', walletBalance: newBalance });
-  } catch (err) {
-    console.error('Error in /api/join-individual:', err);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
 // New API endpoint to join a team tournament
 router.post('/api/join-team', async (req, res) => {
   if (!req.session.username || !req.session.userEmail) {
@@ -333,13 +262,6 @@ router.post('/api/join-team', async (req, res) => {
       return res.status(400).json({ error: 'Insufficient wallet balance' });
     }
 
-    // Check subscription
-    const subscription = await db.collection('subscriptionstable').findOne({ username: req.session.userEmail });
-    const subscribed = subscription && new Date(subscription.end_date) > new Date();
-    if (!subscribed) {
-      return res.status(403).json({ error: 'Active subscription required to join tournaments' });
-    }
-
     // Deduct entry fee from captain
     await db.collection('user_balances').updateOne(
       { user_id: user._id },
@@ -357,7 +279,7 @@ router.post('/api/join-team', async (req, res) => {
       player1_approved: username === player1 ? 1 : 0,
       player2_approved: username === player2 ? 1 : 0,
       player3_approved: username === player3 ? 1 : 0,
-      approved: username === player1 && username === player2 && username === player3 ? 1 : 0,
+      approved: (username === player1 && username === player2 && username === player3) ? 1 : 0,
       enrollment_date: new Date()
     });
 
@@ -514,7 +436,7 @@ router.get('/api/profile', async (req, res) => {
   const walletBalance = balance?.wallet_balance || 0;
 
   const sales = await db.collection('sales').aggregate([
-    { $match: { buyer: row.name } },
+    { $match: { $or: [ { buyer_id: playerId }, { buyer: row.name } ] } },
     { $lookup: { from: 'products', localField: 'product_id', foreignField: '_id', as: 'product' } },
     { $unwind: '$product' },
     { $project: { name: '$product.name' } }
@@ -934,7 +856,8 @@ router.post('/api/buy', async (req, res) => {
     console.log('Deducting balance and updating product availability');
     await db.collection('user_balances').updateOne(
       { user_id: user._id },
-      { $inc: { wallet_balance: -numericPrice } }
+      { $inc: { wallet_balance: -numericPrice } },
+      { upsert: true }
     );
     console.log('Updating product availability');
     await db.collection('products').updateOne(
@@ -947,11 +870,14 @@ router.post('/api/buy', async (req, res) => {
       product_id: new ObjectId(productId),
       price: Number(numericPrice),
       buyer: String(buyer),
+      buyer_id: user._id,
       college: String(college),
       purchase_date: new Date()
     });
 
-    const updatedBalance = walletBalance - numericPrice;
+    // Return actual updated balance from DB
+    const newBalanceDoc = await db.collection('user_balances').findOne({ user_id: user._id });
+    const updatedBalance = newBalanceDoc?.wallet_balance ?? (walletBalance - numericPrice);
     res.json({ success: true, message: 'Purchase successful!', walletBalance: updatedBalance });
 
   } catch (err) {
@@ -960,75 +886,7 @@ router.post('/api/buy', async (req, res) => {
   }
 });
 
-//Teja
-router.post('/api/buy', async (req, res) => {
-  if (!req.session.userEmail) {
-    return res.status(401).json({ success: false, message: 'Please log in' });
-  }
-
-  try {
-    const db = await connectDB();
-    const { price, buyer, college, productId } = req.body;
-
-    if (!price || !productId) {
-      return res.status(400).json({ success: false, message: 'Invalid request' });
-    }
-
-    const user = await db.collection('users').findOne({
-      email: req.session.userEmail,
-      role: 'player',
-      isDeleted: 0
-    });
-
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-
-    const balanceDoc = await db.collection('user_balances').findOne({ user_id: user._id });
-    const walletBalance = balanceDoc?.wallet_balance || 0;
-    const numericPrice = parseFloat(price);
-
-    if (walletBalance < numericPrice) {
-      return res.json({ success: false, message: 'Insufficient wallet balance' });
-    }
-
-    // Check product availability
-    console.log('Checking product availability');
-    const product = await db.collection('products').findOne({ _id: new ObjectId(productId) });
-    if (!product || product.availability <= 0) {
-      return res.json({ success: false, message: 'Product unavailable' });
-    }
-
-    // Deduct wallet balance and reduce availability
-    console.log('Deducting balance and updating product availability');
-    await db.collection('user_balances').updateOne(
-      { user_id: user._id },
-      { $inc: { wallet_balance: -numericPrice } }
-    );
-console.log('Updating product availability');
-    await db.collection('products').updateOne(
-      { _id: new ObjectId(productId) },
-      { $inc: { availability: -1 } }
-    );
-
-    // Record the sale
-    await db.collection('sales').insertOne({
-  product_id: new ObjectId(productId),
-  price: Number(numericPrice),
-  buyer: String(buyer),
-  college: String(college),
-  purchase_date: new Date()
-});
-
-
-    const updatedBalance = walletBalance - numericPrice;
-    res.json({ success: true, message: 'Purchase successful!', walletBalance: updatedBalance });
-
-  } catch (err) {
-    console.error('Error in /api/buy:', err);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-});
+// Removed duplicate /api/buy route (Teja) to avoid conflicts
 router.post('/api/subscribe', async (req, res) => {
   if (!req.session.userEmail) {
     return res.status(401).json({ success: false, message: 'Please log in' });
