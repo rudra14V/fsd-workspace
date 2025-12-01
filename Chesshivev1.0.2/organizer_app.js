@@ -373,6 +373,12 @@ router.delete('/api/organizers/:email', async (req, res) => {
 
     if (result.modifiedCount > 0) {
       console.log('Organizer removed:', email);
+      // If organizer deleted themself, clear session
+      if (email === req.session.userEmail) {
+        req.session.destroy(err => {
+          if (err) console.error('Error destroying session:', err);
+        });
+      }
       res.json({ success: true, message: 'Organizer removed successfully' });
     } else {
       res.status(404).json({ success: false, message: 'Organizer not found' });
