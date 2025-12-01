@@ -310,6 +310,9 @@ function PlayerDashboard() {
             <Link to="/player/player_chat" className="nav-item">
               <i className="fas fa-comments" aria-hidden="true" /><span>Live Chat</span>
             </Link>
+            <Link to="/player/game_request" className="nav-item">
+              <i className="fas fa-chess-board" aria-hidden="true" /><span>Request Chess Match</span>
+            </Link>
           </div>
 
           <div className="logout-box">
@@ -384,6 +387,19 @@ function PlayerDashboard() {
                 })
               )}
             </ul>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="updates-section" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:'1rem' }}>
+            <h3><i className="fas fa-bolt" /> Quick Actions</h3>
+            <div style={{ display:'flex', gap:'1rem', flexWrap:'wrap' }}>
+              <Link to="/player/game_request" className="nav-item" style={{ background:'var(--sea-green)', color:'#fff', padding:'0.6rem 1rem', borderRadius:8, textDecoration:'none' }}>
+                <i className="fas fa-chess-board" /> <span>Request Match</span>
+              </Link>
+              <Link to="/player/play_chess" className="nav-item" style={{ background:'var(--sky-blue)', color:'var(--on-accent)', padding:'0.6rem 1rem', borderRadius:8, textDecoration:'none' }}>
+                <i className="fas fa-chess" /> <span>Open Game</span>
+              </Link>
+            </div>
           </div>
 
           {/* Latest Store Items */}
