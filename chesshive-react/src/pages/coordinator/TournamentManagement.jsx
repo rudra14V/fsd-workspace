@@ -145,13 +145,21 @@ function TournamentManagement() {
       return;
     }
     const payload = {
+      // camelCase fields used by React API
       tournamentName: form.tournamentName.trim(),
       tournamentDate: form.tournamentDate,
       time: form.tournamentTime.trim(),
       location: form.tournamentLocation.trim(),
-      entryFee: form.entryFee,
+      entryFee: typeof form.entryFee === 'string' ? parseFloat(form.entryFee) : form.entryFee,
       type: form.type,
-      noOfRounds: form.noOfRounds
+      noOfRounds: typeof form.noOfRounds === 'string' ? parseInt(form.noOfRounds, 10) : form.noOfRounds,
+      // snake_case fields for legacy API compatibility
+      name: form.tournamentName.trim(),
+      date: form.tournamentDate,
+      entry_fee: typeof form.entryFee === 'string' ? parseFloat(form.entryFee) : form.entryFee,
+      no_of_rounds: typeof form.noOfRounds === 'string' ? parseInt(form.noOfRounds, 10) : form.noOfRounds,
+      tournamentTime: form.tournamentTime.trim(),
+      tournamentLocation: form.tournamentLocation.trim(),
     };
     try {
       const endpoint = editingId ? `/coordinator/api/tournaments/${editingId}` : '/coordinator/api/tournaments';
@@ -178,13 +186,13 @@ function TournamentManagement() {
     if (!t) return;
     setEditingId(id);
     setForm({
-      tournamentName: t.name || '',
-      tournamentDate: t.date ? new Date(t.date).toISOString().split('T')[0] : '',
-      tournamentTime: t.time || '',
-      tournamentLocation: t.location || '',
-      entryFee: t.entry_fee ?? '',
+      tournamentName: t.name || t.tournamentName || '',
+      tournamentDate: t.date ? new Date(t.date).toISOString().split('T')[0] : (t.tournamentDate || ''),
+      tournamentTime: t.time || t.tournamentTime || '',
+      tournamentLocation: t.location || t.tournamentLocation || '',
+      entryFee: (typeof t.entry_fee !== 'undefined' ? t.entry_fee : (typeof t.entryFee !== 'undefined' ? t.entryFee : '')),
       type: t.type || '',
-      noOfRounds: t.noOfRounds ?? ''
+      noOfRounds: (typeof t.no_of_rounds !== 'undefined' ? t.no_of_rounds : (typeof t.noOfRounds !== 'undefined' ? t.noOfRounds : ''))
     });
     // preserve current filters in URL if any (optional)
     setSearchParams((prev) => prev);
@@ -386,9 +394,9 @@ function TournamentManagement() {
                         <td style={styles.td}>{isNaN(dateObj) ? '' : dateObj.toLocaleDateString()}</td>
                         <td style={styles.td}>{t.time}</td>
                         <td style={styles.td}>{t.location}</td>
-                        <td style={styles.td}>₹{t.entry_fee}</td>
+                        <td style={styles.td}>₹{typeof t.entry_fee !== 'undefined' ? t.entry_fee : t.entryFee}</td>
                         <td style={styles.td}>{t.type}</td>
-                        <td style={styles.td}>{t.noOfRounds}</td>
+                        <td style={styles.td}>{typeof t.no_of_rounds !== 'undefined' ? t.no_of_rounds : t.noOfRounds}</td>
                         <td style={{ ...styles.td, ...styles.status(statusClass) }}><i className="fas fa-circle" aria-hidden="true"></i> {status}</td>
                         <td style={styles.td}>
                           {t.status === 'Approved' && (
@@ -398,7 +406,7 @@ function TournamentManagement() {
                               </Link>
                               {t.type === 'Individual' && (
                                 <>
-                                  <Link to={`/coordinator/pairings?tournament_id=${t._id}&rounds=${t.noOfRounds}`} style={styles.actionBtn}>
+                                  <Link to={`/coordinator/pairings?tournament_id=${t._id}&rounds=${typeof t.no_of_rounds !== 'undefined' ? t.no_of_rounds : t.noOfRounds}`} style={styles.actionBtn}>
                                     <i className="fas fa-chess-board" aria-hidden="true"></i> Pairings
                                   </Link>
                                   <Link to={`/coordinator/rankings?tournament_id=${t._id}`} style={styles.actionBtn}>

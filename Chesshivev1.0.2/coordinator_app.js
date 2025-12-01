@@ -254,6 +254,71 @@ router.post('/api/tournaments', async (req, res) => {
   }
 });
 
+// Update Tournament API
+router.put('/api/tournaments/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid tournament ID' });
+    }
+
+    const db = await connectDB();
+    const user = await db.collection('users').findOne({ 
+      email: req.session.userEmail,
+      role: 'coordinator' 
+    });
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'User not logged in' });
+    }
+    const username = req.session.username || user.name || req.session.userEmail;
+
+    // Accept both camelCase and snake_case from frontend
+    const body = req.body || {};
+    const name = (body.tournamentName ?? body.name);
+    const date = (body.tournamentDate ?? body.date);
+    const time = (body.time ?? body.tournamentTime);
+    const location = (body.location ?? body.tournamentLocation);
+    const entryFee = (body.entryFee ?? body.entry_fee);
+    const type = body.type;
+    const rounds = (body.noOfRounds ?? body.no_of_rounds);
+
+    const $set = {};
+    if (typeof name === 'string' && name.trim()) $set.name = name.trim();
+    if (date) {
+      const d = new Date(date);
+      if (!isNaN(d.getTime())) $set.date = d;
+    }
+    if (typeof time === 'string' && time.trim()) $set.time = time.trim();
+    if (typeof location === 'string' && location.trim()) $set.location = location.trim();
+    if (entryFee !== undefined && entryFee !== null && !isNaN(parseFloat(entryFee))) $set.entry_fee = parseFloat(entryFee);
+    if (typeof type === 'string' && type.trim()) $set.type = type.trim();
+    if (rounds !== undefined && rounds !== null && !isNaN(parseInt(rounds))) $set.noOfRounds = parseInt(rounds);
+
+    if (Object.keys($set).length === 0) {
+      return res.status(400).json({ success: false, message: 'No valid fields provided to update' });
+    }
+
+    const result = await db.collection('tournaments').updateOne(
+      { _id: new ObjectId(id), coordinator: username },
+      { $set }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ success: false, message: 'Tournament not found or not owned by you' });
+    }
+
+    if (result.modifiedCount === 0) {
+      // Nothing changed but consider it ok
+      return res.json({ success: true, message: 'No changes detected' });
+    }
+
+    return res.json({ success: true, message: 'Tournament updated successfully' });
+  } catch (error) {
+    console.error('Error updating tournament:', error);
+    return res.status(500).json({ success: false, message: 'Failed to update tournament' });
+  }
+});
+
 router.delete('/api/tournaments/:id', async (req, res) => {
   try {
     const id = req.params.id;
