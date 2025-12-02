@@ -711,30 +711,6 @@ router.post('/api/add-funds', async (req, res) => {
   res.json({ success: true, walletBalance: newBalance });
 });
 
-// Quick subscribe endpoint for testing join flow
-router.post('/api/subscribe', async (req, res) => {
-  if (!req.session.userEmail) {
-    return res.status(401).json({ error: 'Please log in' });
-  }
-  try {
-    const db = await connectDB();
-    const plan = (req.body?.plan || 'Basic').toString();
-    const months = parseInt(req.body?.months, 10) || 1;
-    const start = new Date();
-    const end = new Date(start.getTime());
-    end.setMonth(end.getMonth() + months);
-    await db.collection('subscriptionstable').updateOne(
-      { username: req.session.userEmail },
-      { $set: { username: req.session.userEmail, plan, start_date: start, end_date: end } },
-      { upsert: true }
-    );
-    res.json({ success: true, plan, start_date: start, end_date: end });
-  } catch (err) {
-    console.error('Error in /api/subscribe:', err);
-    res.status(500).json({ error: 'Failed to subscribe' });
-  }
-});
-
 router.get('/api/pairings', async (req, res) => {
   const tournamentId = req.query.tournament_id;
   const totalRounds = parseInt(req.query.rounds) || 5;
@@ -1045,18 +1021,20 @@ router.post('/api/subscribe', async (req, res) => {
     const endDate = new Date();
     endDate.setMonth(startDate.getMonth() + 1);
 
+    const subscriptionDoc = {
+      username: req.session.userEmail,
+      plan,
+      price: numericPrice,
+      start_date: startDate,
+      end_date: endDate
+    };
+    
+    console.log('Attempting to save subscription:', JSON.stringify(subscriptionDoc, null, 2));
+
     // Save subscription
     await db.collection('subscriptionstable').updateOne(
       { username: req.session.userEmail },
-      {
-        $set: {
-          username: req.session.userEmail,
-          plan,
-          price: numericPrice,
-          start_date: startDate,
-          end_date: endDate
-        }
-      },
+      { $set: subscriptionDoc },
       { upsert: true }
     );
 
@@ -1068,7 +1046,10 @@ router.post('/api/subscribe', async (req, res) => {
     });
   } catch (err) {
     console.error('Error in /api/subscribe:', err);
-    res.status(500).json({ success: false, message: 'Server error' });
+    if (err.code === 121) {
+      console.error('Validation error details:', JSON.stringify(err.errInfo, null, 2));
+    }
+    res.status(500).json({ success: false, message: 'Server error: ' + err.message });
   }
 });
 router.get('/api/growth_analytics', async (req, res) => {
