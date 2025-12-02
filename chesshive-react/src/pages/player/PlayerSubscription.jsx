@@ -111,9 +111,7 @@ function PlayerSubscription() {
       <div style={styles.container}>
   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
     <h2 style={styles.h2}>Manage Subscription</h2>
-    <div>
-      <button onClick={toggleTheme} style={{ background: 'transparent', border: '2px solid var(--sea-green)', color: 'var(--sea-green)', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', fontFamily: 'Cinzel, serif', fontWeight: 'bold' }}>{isDark ? 'Switch to Light' : 'Switch to Dark'}</button>
-    </div>
+
   </div>
   {loading ? <p style={{ textAlign: 'center' }}>Loading...</p> : null}
 

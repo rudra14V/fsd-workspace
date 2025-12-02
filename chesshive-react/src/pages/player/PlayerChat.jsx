@@ -298,7 +298,7 @@ function PlayerChat() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div style={{ color: 'var(--text-color)', fontSize: 14 }}>{joined ? 'Connected' : 'Not joined'}</div>
-                <button onClick={toggleTheme} style={{ background: 'transparent', border: '2px solid var(--sea-green)', color: 'var(--sea-green)', padding: '6px 10px', borderRadius: 8, cursor: 'pointer', fontFamily: 'Cinzel, serif', fontWeight: 'bold' }}>{isDark ? 'Light' : 'Dark'}</button>
+                
               </div>
             </div>
 

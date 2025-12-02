@@ -317,9 +317,7 @@ function PlayerTournament() {
       <div className="content">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h1><i className="fas fa-trophy" /> Tournaments</h1>
-          <div>
-            <button onClick={toggleTheme} style={{ background: 'transparent', border: '2px solid var(--sea-green)', color: 'var(--sea-green)', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', fontFamily: 'Cinzel, serif', fontWeight: 'bold', letterSpacing: '.5px' }}>{isDark ? 'Switch to Light' : 'Switch to Dark'}</button>
-          </div>
+          
         </div>
 
         {/* Message banner */}

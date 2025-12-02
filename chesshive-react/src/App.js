@@ -13,6 +13,7 @@ import PlayerGrowth from './pages/player/PlayerGrowth';
 import OneOnOne from './pages/player/OneOnOne';
 import PlayerPairings from './pages/player/PlayerPairings';
 import PlayerGameRequest from './pages/player/PlayerGameRequest';
+import PlayerSettings from './pages/player/PlayerSettings';
 import PlayerPlayChess from './pages/player/PlayerPlayChess';
 import PlayerChat from './pages/player/PlayerChat';
 import PlayerRankings from './pages/player/PlayerRankings';
@@ -61,6 +62,7 @@ function App() {
         <Route path="/player/one_on_one" element={<OneOnOne />} />
         <Route path="/player/pairings" element={<PlayerPairings />} />
         <Route path="/player/game_request" element={<PlayerGameRequest />} />
+          <Route path="/player/settings" element={<PlayerSettings />} />
         <Route path="/player/play_chess" element={<PlayerPlayChess />} />
         <Route path="/player/player_chat" element={<PlayerChat />} />
         <Route path="/player/rankings" element={<PlayerRankings />} />

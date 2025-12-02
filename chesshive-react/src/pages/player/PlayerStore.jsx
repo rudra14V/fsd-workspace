@@ -190,9 +190,7 @@ function PlayerStore() {
       <div style={styles.container}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h1 style={styles.h1}>ChessHive Store</h1>
-          <div>
-            <button onClick={toggleTheme} style={{ background: 'transparent', border: '2px solid var(--sea-green)', color: 'var(--sea-green)', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', fontFamily: 'Cinzel, serif', fontWeight: 'bold' }}>{isDark ? 'Switch to Light' : 'Switch to Dark'}</button>
-          </div>
+
         </div>
 
         {/* Alerts */}

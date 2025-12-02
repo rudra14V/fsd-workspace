@@ -110,9 +110,7 @@ function PlayerProfile() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
             <h1>Player Profile</h1>
             <div>
-              <button onClick={toggleTheme} style={styles.themeBtn} aria-pressed={isDark}>
-                {isDark ? 'Switch to Light' : 'Switch to Dark'}
-              </button>
+              
             </div>
           </div>
 

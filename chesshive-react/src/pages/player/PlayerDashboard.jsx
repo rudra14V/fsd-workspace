@@ -19,6 +19,7 @@ function PlayerDashboard() {
   const [latestItems, setLatestItems] = useState([]);
 
   const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   // Error state
   const [errorMsg, setErrorMsg] = useState('');
@@ -197,6 +198,11 @@ function PlayerDashboard() {
   }, []);
 
   useEffect(() => {
+    const saved = localStorage.getItem('player_notifications_enabled');
+    setNotificationsEnabled(saved === null ? true : saved === 'true');
+  }, []);
+
+  useEffect(() => {
     loadDashboard();
     updateUnreadCount();
   }, [loadDashboard, updateUnreadCount]);
@@ -280,10 +286,12 @@ function PlayerDashboard() {
           <div className="sidebar-header">
             <h2><i className="fas fa-chess" /> ChessHive</h2>
             <p>Welcome, {playerName}!</p>
-            <button className="inbox-icon" onClick={loadNotifications} aria-label={`Open notifications (${unreadCount} unread)`}>
-              <i className="fas fa-inbox" aria-hidden="true" />
-              <span className="unread-count" aria-hidden="true">{unreadCount}</span>
-            </button>
+            {notificationsEnabled && (
+              <button className="inbox-icon" onClick={loadNotifications} aria-label={`Open notifications (${unreadCount} unread)`}>
+                <i className="fas fa-inbox" aria-hidden="true" />
+                <span className="unread-count" aria-hidden="true">{unreadCount}</span>
+              </button>
+            )}
           </div>
 
           <div className="nav-section">
@@ -310,13 +318,12 @@ function PlayerDashboard() {
             <Link to="/player/player_chat" className="nav-item">
               <i className="fas fa-comments" aria-hidden="true" /><span>Live Chat</span>
             </Link>
+            <Link to="/player/settings" className="nav-item">
+              <i className="fas fa-cog" aria-hidden="true" /><span>Settings</span>
+            </Link>
           </div>
 
-          <div className="logout-box">
-            <button onClick={() => navigate('/login')}>
-              <i className="fas fa-sign-out-alt" /><span>Log Out</span>
-            </button>
-          </div>
+          {/* Logout control moved to Settings */}
         </div>
 
         {/* Content */}
@@ -333,9 +340,7 @@ function PlayerDashboard() {
               <i className="fas fa-chess-king" />
               Welcome to ChessHive, {playerName}!
             </h1>
-            <div>
-              <button onClick={toggleTheme} className="theme-toggle-btn" style={{ background: 'transparent', border: '2px solid var(--sea-green)', color: 'var(--sea-green)', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', fontFamily: 'Cinzel, serif', fontWeight: 'bold' }}>{isDark ? 'Switch to Light' : 'Switch to Dark'}</button>
-            </div>
+            <div />
           </div>
 
           {/* Team Requests */}
