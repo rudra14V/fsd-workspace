@@ -20,13 +20,13 @@ const { ObjectId } = require('mongodb');
 
 const app = express();
 const cors = require('cors');
-// Allow CORS from frontend
-app.use(cors({ origin: 'http://localhost:3001', credentials: true }));
+// Allow CORS from common React dev ports (proxy or direct)
+app.use(cors({ origin: ['http://localhost:3000', 'http://localhost:3001'], credentials: true }));
 // Increase maxHeaderSize to accept larger request headers (fixes 431 errors)
 // Default Node limit can be too small when many/large cookies or headers are present.
 // Raise to 1MB to tolerate larger Cookie headers from development environments.
 const server = http.createServer({ maxHeaderSize: 1048576 }, app);
-const io = new Server(server, { cors: { origin: 'http://localhost:3001', methods: ['GET', 'POST'] } });
+const io = new Server(server, { cors: { origin: ['http://localhost:3000', 'http://localhost:3001'], methods: ['GET', 'POST'] } });
 const PORT = process.env.PORT || 3000;
 
 app.use(session({
@@ -51,7 +51,21 @@ try { const authrouter = require('./routes/auth'); app.use(authrouter); } catch 
 // Role middleware
 const isAdmin = (req, res, next) => { if (req.session.userRole === 'admin') next(); else res.status(403).send('Unauthorized'); };
 const isOrganizer = (req, res, next) => { if (req.session.userRole === 'organizer') next(); else res.status(403).send('Unauthorized'); };
-const isCoordinator = (req, res, next) => { if (req.session.userRole === 'coordinator') next(); else res.status(403).send('Unauthorized'); };
+const isCoordinator = (req, res, next) => {
+  if (req.session.userRole === 'coordinator') return next();
+  // Dev convenience: allow header override to unblock local React without breaking production
+  const isDev = (process.env.NODE_ENV || 'development') !== 'production';
+  const headerRole = (req.get('x-dev-role') || '').toLowerCase();
+  const headerEmail = req.get('x-dev-email');
+  if (isDev && headerRole === 'coordinator' && headerEmail) {
+    req.session.userRole = 'coordinator';
+    req.session.userEmail = headerEmail;
+    // username is optional but helps downstream queries
+    req.session.username = req.session.username || headerEmail;
+    return next();
+  }
+  return res.status(403).send('Unauthorized');
+};
 const isPlayer = (req, res, next) => { if (req.session.userRole === 'player') next(); else res.status(403).send('Unauthorized'); };
 const isAdminOrOrganizer = (req, res, next) => { if (req.session.userRole === 'admin' || req.session.userRole === 'organizer') next(); else res.status(403).json({ success: false, message: 'Unauthorized' }); };
 
@@ -284,6 +298,39 @@ app.post('/api/notifications/mark-read', async (req, res) => {
   } catch (err) {
     console.error('POST /api/notifications/mark-read error:', err);
     return res.status(500).json({ error: 'Failed to mark as read' });
+  }
+});
+
+// Dev-only: inject a feedback_request notification for the logged-in player
+app.post('/dev/mock-feedback', async (req, res) => {
+  try {
+    if ((process.env.NODE_ENV || 'development') === 'production') {
+      return res.status(403).json({ error: 'Not available in production' });
+    }
+    if (!req.session.userEmail || req.session.userRole !== 'player') {
+      return res.status(401).json({ error: 'Please log in as player' });
+    }
+    const { tournamentId } = req.body || {};
+    if (!tournamentId || !ObjectId.isValid(tournamentId)) {
+      return res.status(400).json({ error: 'Valid tournamentId required' });
+    }
+    const db = await connectDB();
+    const user = await db.collection('users').findOne({ email: req.session.userEmail, role: 'player' });
+    if (!user) return res.status(404).json({ error: 'Player not found' });
+    const tid = new ObjectId(tournamentId);
+    const tournament = await db.collection('tournaments').findOne({ _id: tid });
+    if (!tournament) return res.status(404).json({ error: 'Tournament not found' });
+    await db.collection('notifications').insertOne({
+      user_id: user._id,
+      type: 'feedback_request',
+      tournament_id: tid,
+      read: false,
+      date: new Date()
+    });
+    return res.json({ success: true });
+  } catch (e) {
+    console.error('POST /dev/mock-feedback error:', e);
+    return res.status(500).json({ error: 'Failed to create mock feedback notification' });
   }
 });
 
