@@ -255,71 +255,7 @@ function PlayerTournament() {
   // Local UI state: which team join form is open
   const [openJoinFormId, setOpenJoinFormId] = useState(null);
 
-  // Feedback modal state
-  const [feedbackPrompt, setFeedbackPrompt] = useState(null); // { tournamentId, tournamentName }
-  const [feedbackRating, setFeedbackRating] = useState(5);
-  const [feedbackComments, setFeedbackComments] = useState('');
 
-  // Poll notifications to auto-show feedback prompt
-  useEffect(() => {
-    let active = true;
-    let timer;
-    const poll = async () => {
-      try {
-        const out = await fetchJson('/api/notifications');
-        if (!out || !active) return;
-        const { res, data } = out;
-        if (!res.ok) return;
-        const list = Array.isArray(data?.notifications) ? data.notifications : [];
-        const unreadFeedback = list.find(n => n.type === 'feedback_request' && !n.read);
-        if (unreadFeedback && !feedbackPrompt) {
-          // show prompt
-          setFeedbackPrompt({ tournamentId: unreadFeedback.tournament_id, tournamentName: unreadFeedback.tournamentName || 'Tournament' });
-        }
-      } catch (e) {
-        // ignore polling errors silently
-      } finally {
-        if (active) timer = setTimeout(poll, 5000);
-      }
-    };
-    poll();
-    return () => { active = false; if (timer) clearTimeout(timer); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const submitFeedback = async () => {
-    if (!feedbackPrompt) return;
-    setLoading(true);
-    try {
-      const out = await fetchJson('/player/api/submit-feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tournamentId: feedbackPrompt.tournamentId, rating: parseInt(feedbackRating, 10), comments: feedbackComments })
-      });
-      if (!out) return;
-      const { res, data } = out;
-      if (res.ok) {
-        setMessage({ text: 'Feedback submitted successfully!', isError: false });
-        setFeedbackPrompt(null);
-        setFeedbackComments('');
-        // mark notification read (best-effort): refetch and mark the first matching
-        try {
-          const notifOut = await fetchJson('/api/notifications');
-          const list = Array.isArray(notifOut?.data?.notifications) ? notifOut.data.notifications : [];
-          const match = list.find(n => n.type === 'feedback_request' && n.tournament_id === feedbackPrompt.tournamentId && !n.read);
-          if (match) {
-            await fetchJson('/api/notifications/mark-read', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: match._id }) });
-          }
-        } catch {}
-      } else {
-        setMessage({ text: data.error || 'Failed to submit feedback', isError: true });
-      }
-    } catch (err) {
-      setMessage({ text: 'Error submitting feedback.', isError: true });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div>
@@ -383,7 +319,6 @@ function PlayerTournament() {
       <div className="content">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h1><i className="fas fa-trophy" /> Tournaments</h1>
-          
         </div>
 
         {/* Message banner */}
@@ -451,6 +386,7 @@ function PlayerTournament() {
           </select>
         </div>
         <div className={`form-container ${loading ? 'loading' : ''}`}>
+          <div className="table-responsive">
           <table>
             <thead>
               <tr>
@@ -493,6 +429,7 @@ function PlayerTournament() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
         <div className="more-container">
           {individualVisibleCount < filteredIndividuals.length && (
@@ -536,6 +473,7 @@ function PlayerTournament() {
           </select>
         </div>
         <div className={`form-container ${loading ? 'loading' : ''}`}>
+          <div className="table-responsive">
           <table>
             <thead>
               <tr>
@@ -605,6 +543,7 @@ function PlayerTournament() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
         <div className="more-container">
           {teamVisibleCount < filteredTeams.length && (
@@ -623,29 +562,6 @@ function PlayerTournament() {
       <a href="/player/player_dashboard" className="back-to-dashboard">
         <i className="fas fa-arrow-left" /> Back to Dashboard
       </a>
-
-      {feedbackPrompt && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: 'var(--panel-bg)', color: 'var(--text-color)', padding: 20, borderRadius: 12, minWidth: 320, maxWidth: 480, boxShadow: '0 6px 24px rgba(0,0,0,0.5)', border: '1px solid var(--border-color)' }}>
-            <h3 style={{ fontFamily: 'Cinzel, serif', color: 'var(--sea-green)', marginBottom: 12 }}>
-              Provide Feedback
-            </h3>
-            <div style={{ marginBottom: 12 }}>Tournament: <strong>{feedbackPrompt.tournamentName}</strong></div>
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ fontFamily: 'Cinzel, serif', fontWeight: 600 }}>Rating (1-5)</label>
-              <input type="number" min="1" max="5" value={feedbackRating} onChange={e => setFeedbackRating(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 8, border: '2px solid var(--sky-blue)', background: '#03101d', color: 'var(--text-color)' }} />
-            </div>
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ fontFamily: 'Cinzel, serif', fontWeight: 600 }}>Comments</label>
-              <textarea value={feedbackComments} onChange={e => setFeedbackComments(e.target.value)} rows={4} style={{ width: '100%', padding: 10, borderRadius: 8, border: '2px solid var(--sky-blue)', background: '#03101d', color: 'var(--text-color)', resize: 'vertical' }} />
-            </div>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-              <button className="btn" onClick={() => setFeedbackPrompt(null)}>Cancel</button>
-              <button className="btn" onClick={submitFeedback} disabled={loading}>Submit</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

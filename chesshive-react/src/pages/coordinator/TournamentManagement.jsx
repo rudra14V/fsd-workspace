@@ -383,6 +383,7 @@ function TournamentManagement() {
 
           {!loading && !error && activeTournaments.length > 0 && (
             <>
+              <div className="table-responsive">
               <table style={styles.table}>
                 <thead>
                   <tr>
@@ -460,6 +461,7 @@ function TournamentManagement() {
                   })}
                 </tbody>
               </table>
+              </div>
 
               <div style={styles.moreWrap}>
                 {visibleRows < activeTournaments.length && (

@@ -770,13 +770,14 @@ router.post('/api/tournaments/:id/request-feedback', async (req, res) => {
       ...teamEnrollments.flatMap(t => [t.player1_name, t.player2_name, t.player3_name].filter(Boolean))
     ]);
     const names = Array.from(playerUsernames).filter(Boolean);
-    // Build case-insensitive exact-match regex list for robust matching
-    const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const nameRegexes = names.map(n => new RegExp(`^${escapeRegExp(n)}$`, 'i'));
-
-    // Get user_ids for players by name (case-insensitive)
-    const players = await db.collection('users').find({ role: 'player', name: { $in: nameRegexes } }).toArray();
-    console.log('Players found:', players.length);
+    console.log('Player names extracted from enrollments:', names);
+    
+    // Get user_ids for players by name (case-insensitive exact match)
+    const players = await db.collection('users').find({ 
+      role: 'player',
+      name: { $in: names }
+    }).toArray();
+    console.log('Players found in users collection:', players.length, 'Names:', players.map(p => p.name));
     const notifications = players.map(player => ({
       user_id: player._id,
       type: 'feedback_request',

@@ -259,12 +259,17 @@ app.get('/api/session', (req, res) => {
 // Player notifications (root-level aliases for React client)
 app.get('/api/notifications', async (req, res) => {
   try {
+    console.log('GET /api/notifications - Session:', { email: req.session.userEmail, role: req.session.userRole });
     if (!req.session.userEmail || req.session.userRole !== 'player') {
       return res.status(401).json({ error: 'Please log in' });
     }
     const db = await connectDB();
     const user = await db.collection('users').findOne({ email: req.session.userEmail, role: 'player' });
-    if (!user) return res.status(404).json({ error: 'Player not found' });
+    if (!user) {
+      console.log('GET /api/notifications - User not found for email:', req.session.userEmail);
+      return res.status(404).json({ error: 'Player not found' });
+    }
+    console.log('GET /api/notifications - Found user:', { _id: user._id, name: user.name, email: user.email });
 
     const notifications = await db.collection('notifications').aggregate([
       { $match: { user_id: user._id } },
@@ -272,6 +277,8 @@ app.get('/api/notifications', async (req, res) => {
       { $unwind: '$tournament' },
       { $project: { _id: 1, type: 1, read: 1, date: 1, tournamentName: '$tournament.name', tournament_id: '$tournament._id' } }
     ]).toArray();
+
+    console.log('GET /api/notifications - Found notifications:', notifications.length, notifications.map(n => ({ type: n.type, read: n.read, tournament: n.tournamentName })));
 
     const formatted = notifications.map(n => ({
       ...n,
