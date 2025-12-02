@@ -401,34 +401,55 @@ router.get('/api/store', async (req, res) => {
 });
 
 router.get('/api/subscription', async (req, res) => {
+  console.log('GET /player/api/subscription - Session:', { 
+    userEmail: req.session.userEmail, 
+    userRole: req.session.userRole, 
+    username: req.session.username 
+  });
+  
   if (!req.session.userEmail) {
+    console.log('GET /player/api/subscription - No userEmail in session');
     return res.status(401).json({ error: 'Please log in' });
   }
+  
   try {
     const db = await connectDB();
+    console.log('GET /player/api/subscription - Looking up user with email:', req.session.userEmail);
+    
     const row = await db.collection('users').aggregate([
       { $match: { email: req.session.userEmail, role: 'player', isDeleted: 0 } },
       { $lookup: { from: 'user_balances', localField: '_id', foreignField: 'user_id', as: 'balance' } },
       { $unwind: { path: '$balance', preserveNullAndEmptyArrays: true } },
       { $project: { _id: 1, wallet_balance: '$balance.wallet_balance' } }
     ]).next();
+    
     if (!row) {
+      console.log('GET /player/api/subscription - User not found');
       return res.status(404).json({ error: 'User not found' });
     }
+    
+    console.log('GET /player/api/subscription - User found, wallet:', row.wallet_balance);
+    
     let subscription = await db.collection('subscriptionstable').findOne({ username: req.session.userEmail });
+    console.log('GET /player/api/subscription - Subscription:', subscription);
+    
     if (subscription) {
       const now = new Date();
       if (now > new Date(subscription.end_date)) {
         await db.collection('subscriptionstable').deleteOne({ username: req.session.userEmail });
+        console.log('GET /player/api/subscription - Expired subscription deleted');
         subscription = null;
       }
     }
-    res.json({
+    
+    const response = {
       walletBalance: row.wallet_balance || 0,
       currentSubscription: subscription || null
-    });
+    };
+    console.log('GET /player/api/subscription - Sending response:', response);
+    res.json(response);
   } catch (err) {
-    console.error('Server error:', err);
+    console.error('GET /player/api/subscription - Server error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

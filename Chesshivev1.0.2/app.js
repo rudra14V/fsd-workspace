@@ -66,7 +66,16 @@ const isCoordinator = (req, res, next) => {
   }
   return res.status(403).send('Unauthorized');
 };
-const isPlayer = (req, res, next) => { if (req.session.userRole === 'player') next(); else res.status(403).send('Unauthorized'); };
+const isPlayer = (req, res, next) => {
+  // Dev mode: allow override with headers
+  if (process.env.NODE_ENV === 'development' && req.headers['x-dev-role'] === 'player' && req.headers['x-dev-email']) {
+    req.session.userRole = 'player';
+    req.session.userEmail = req.headers['x-dev-email'];
+    req.session.username = req.headers['x-dev-username'] || req.headers['x-dev-email'].split('@')[0];
+    console.log('DEV: isPlayer bypass enabled for', req.session.userEmail);
+  }
+  if (req.session.userRole === 'player') next(); else res.status(403).send('Unauthorized');
+};
 const isAdminOrOrganizer = (req, res, next) => { if (req.session.userRole === 'admin' || req.session.userRole === 'organizer') next(); else res.status(403).json({ success: false, message: 'Unauthorized' }); };
 
 // Mount routers
