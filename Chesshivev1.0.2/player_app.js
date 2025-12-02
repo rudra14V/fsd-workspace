@@ -154,18 +154,23 @@ router.get('/api/tournaments', async (req, res) => {
     const walletBalance = balance?.wallet_balance || 0;
     console.log('Wallet balance:', walletBalance); // Debug log
 
-    const tournaments = await db.collection('tournaments').find({ status: 'Approved' }).toArray();
+    const tournamentsRaw = await db.collection('tournaments').find({ status: 'Approved' }).toArray();
+    const tournaments = (tournamentsRaw || []).map(t => ({ ...t, _id: t._id.toString() }));
     console.log('Fetched tournaments:', tournaments); // Debug log
 
-    const enrolledIndividualTournaments = await db.collection('tournament_players').aggregate([
+    const enrolledIndividualTournamentsRaw = await db.collection('tournament_players').aggregate([
       { $match: { username } },
       { $lookup: { from: 'tournaments', localField: 'tournament_id', foreignField: '_id', as: 'tournament' } },
       { $unwind: '$tournament' },
       { $project: { tournament: 1 } }
     ]).toArray();
+    const enrolledIndividualTournaments = (enrolledIndividualTournamentsRaw || []).map(e => ({
+      ...e,
+      tournament: e.tournament ? { ...e.tournament, _id: e.tournament._id.toString() } : null
+    }));
     console.log('Enrolled individual tournaments:', enrolledIndividualTournaments); // Debug log
 
-    const enrolledTeamTournaments = await db.collection('enrolledtournaments_team').aggregate([
+    const enrolledTeamTournamentsRaw = await db.collection('enrolledtournaments_team').aggregate([
       {
         $match: {
           $or: [{ captain_id: user._id }, { player1_name: username }, { player2_name: username }, { player3_name: username }]
@@ -177,6 +182,7 @@ router.get('/api/tournaments', async (req, res) => {
       { $unwind: '$captain' },
       {
         $project: {
+          _id: 1,
           tournament_id: '$tournament_id',
           tournament: '$tournament',
           captainName: '$captain.name',
@@ -191,6 +197,11 @@ router.get('/api/tournaments', async (req, res) => {
         }
       }
     ]).toArray();
+    const enrolledTeamTournaments = (enrolledTeamTournamentsRaw || []).map(e => ({
+      ...e,
+      _id: e._id ? e._id.toString() : undefined,
+      tournament: e.tournament ? { ...e.tournament, _id: e.tournament._id.toString() } : null
+    }));
     console.log('Enrolled team tournaments:', enrolledTeamTournaments); // Debug log
 
     const subscription = await db.collection('subscriptionstable').findOne({ username: req.session.userEmail });
@@ -208,6 +219,66 @@ router.get('/api/tournaments', async (req, res) => {
     res.json(response);
   } catch (err) {
     console.error('Error in /api/tournaments:', err); // Debug log
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// New API endpoint to join an individual tournament
+router.post('/api/join-individual', async (req, res) => {
+  if (!req.session.username || !req.session.userEmail) {
+    return res.status(401).json({ error: 'Please log in' });
+  }
+  const { tournamentId } = req.body || {};
+  if (!tournamentId) return res.status(400).json({ error: 'Tournament ID is required' });
+  if (!ObjectId.isValid(tournamentId)) return res.status(400).json({ error: 'Invalid tournament ID' });
+
+  try {
+    const db = await connectDB();
+    const username = req.session.username;
+    const user = await db.collection('users').findOne({ name: username, role: 'player', isDeleted: 0 });
+    if (!user) return res.status(404).json({ error: 'Player not found' });
+
+    // Ensure tournament exists and is approved
+    const tournament = await db.collection('tournaments').findOne({ _id: new ObjectId(tournamentId), status: 'Approved' });
+    if (!tournament) return res.status(404).json({ error: 'Tournament not found or not approved' });
+    if ((tournament.type || '').toLowerCase() !== 'individual') {
+      return res.status(400).json({ error: 'This is not an individual tournament' });
+    }
+
+    // Subscription must be active
+    const subscription = await db.collection('subscriptionstable').findOne({ username: req.session.userEmail });
+    if (!subscription || (subscription.end_date && new Date(subscription.end_date) <= new Date())) {
+      return res.status(400).json({ error: 'Subscription required' });
+    }
+
+    // Already enrolled?
+    const already = await db.collection('tournament_players').findOne({ tournament_id: new ObjectId(tournamentId), username });
+    if (already) return res.status(400).json({ error: 'Already enrolled' });
+
+    // Wallet check
+    const balDoc = await db.collection('user_balances').findOne({ user_id: user._id });
+    const walletBalance = balDoc?.wallet_balance || 0;
+    const fee = parseFloat(tournament.entry_fee) || 0;
+    if (walletBalance < fee) return res.status(400).json({ error: 'Insufficient wallet balance' });
+
+    // Deduct and enroll
+    await db.collection('user_balances').updateOne(
+      { user_id: user._id },
+      { $inc: { wallet_balance: -fee } },
+      { upsert: true }
+    );
+
+    await db.collection('tournament_players').insertOne({
+      tournament_id: new ObjectId(tournamentId),
+      username,
+      college: user.college || '',
+      gender: user.gender || ''
+    });
+
+    const newBal = await db.collection('user_balances').findOne({ user_id: user._id });
+    res.json({ success: true, message: 'Joined successfully', walletBalance: newBal?.wallet_balance || (walletBalance - fee) });
+  } catch (err) {
+    console.error('Error in /api/join-individual:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -617,6 +688,30 @@ router.post('/api/add-funds', async (req, res) => {
 
   const newBalance = (await db.collection('user_balances').findOne({ user_id: user._id })).wallet_balance || amount;
   res.json({ success: true, walletBalance: newBalance });
+});
+
+// Quick subscribe endpoint for testing join flow
+router.post('/api/subscribe', async (req, res) => {
+  if (!req.session.userEmail) {
+    return res.status(401).json({ error: 'Please log in' });
+  }
+  try {
+    const db = await connectDB();
+    const plan = (req.body?.plan || 'Basic').toString();
+    const months = parseInt(req.body?.months, 10) || 1;
+    const start = new Date();
+    const end = new Date(start.getTime());
+    end.setMonth(end.getMonth() + months);
+    await db.collection('subscriptionstable').updateOne(
+      { username: req.session.userEmail },
+      { $set: { username: req.session.userEmail, plan, start_date: start, end_date: end } },
+      { upsert: true }
+    );
+    res.json({ success: true, plan, start_date: start, end_date: end });
+  } catch (err) {
+    console.error('Error in /api/subscribe:', err);
+    res.status(500).json({ error: 'Failed to subscribe' });
+  }
 });
 
 router.get('/api/pairings', async (req, res) => {

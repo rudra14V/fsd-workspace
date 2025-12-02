@@ -743,14 +743,17 @@ router.post('/api/tournaments/:id/request-feedback', async (req, res) => {
       return res.status(404).json({ error: 'Tournament not found or you are not authorized' });
     }
 
-    // Ensure tournament is completed (use local timezone for consistency)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Allow feedback request once tournament has started (ongoing or completed)
+    // Build start datetime from stored date + time (HH:MM expected)
     const tDate = new Date(tournament.date);
-    tDate.setHours(0, 0, 0, 0);
-    console.log('Tournament date:', tDate, 'Today:', today);
-    if (tDate >= today) {
-      return res.status(400).json({ error: 'Feedback can only be requested for completed tournaments' });
+    const timeStr = (tournament.time || '').toString();
+    const [hh, mm] = (timeStr.match(/^\d{2}:\d{2}$/) ? timeStr.split(':') : ['00', '00']);
+    const start = new Date(tDate);
+    start.setHours(parseInt(hh || '0', 10), parseInt(mm || '0', 10), 0, 0);
+    const now = new Date();
+    console.log('Tournament start:', start, 'Now:', now);
+    if (now < start) {
+      return res.status(400).json({ error: 'Feedback can be requested once the tournament starts' });
     }
 
     // Check if feedback was already requested

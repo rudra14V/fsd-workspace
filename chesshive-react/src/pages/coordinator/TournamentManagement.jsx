@@ -59,30 +59,44 @@ function TournamentManagement() {
     [tournaments]
   );
 
-  // Compute status (Completed/Ongoing/Yet to Start/Pending)
+  // Compute status based on 1-hour duration window using date + time
   const computeStatus = (t) => {
     let status = t.status || 'Pending';
     let statusClass = 'pending';
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tDate = new Date(t.date);
-    tDate.setHours(0, 0, 0, 0);
-    if (status === 'Approved') {
-      if (tDate < today) {
+    const dateOnly = new Date(t.date);
+    const timeStr = (t.time || '').toString(); // expected HH:MM (24h)
+    // Build start Date from date + time
+    const [hh, mm] = (timeStr.match(/^\d{2}:\d{2}$/) ? timeStr.split(':') : ['00', '00']);
+    const start = new Date(dateOnly);
+    if (!isNaN(parseInt(hh)) && !isNaN(parseInt(mm))) {
+      start.setHours(parseInt(hh, 10), parseInt(mm, 10), 0, 0);
+    }
+    const end = new Date(start.getTime() + 60 * 60 * 1000); // 1 hour duration
+    const now = new Date();
+
+    if (t.status === 'Approved' || t.status === 'Ongoing') {
+      if (now >= end) {
         status = 'Completed';
         statusClass = 'completed';
-      } else if (tDate.toDateString() === today.toDateString()) {
+      } else if (now >= start && now < end) {
         status = 'Ongoing';
         statusClass = 'ongoing';
-      } else {
+      } else if (now < start) {
         status = 'Yet to Start';
         statusClass = 'yet-to-start';
       }
+    } else if (t.status === 'Completed') {
+      status = 'Completed';
+      statusClass = 'completed';
+    } else if (t.status === 'Removed') {
+      status = 'Removed';
+      statusClass = 'removed';
     } else {
       status = 'Pending';
       statusClass = 'pending';
     }
-    return { status, statusClass, dateObj: tDate };
+
+    return { status, statusClass, dateObj: dateOnly };
   };
 
   const validate = () => {
@@ -425,7 +439,7 @@ function TournamentManagement() {
                           <button style={styles.removeBtn} onClick={() => onRemove(t._id)}>
                             <i className="fas fa-trash" aria-hidden="true"></i> Remove
                           </button>
-                          {status === 'Completed' ? (
+                          {(['Ongoing', 'Completed'].includes(status)) ? (
                             t.feedback_requested ? (
                               <a href={`/coordinator/feedback_view?tournament_id=${t._id}`} target="_blank" rel="noreferrer" style={styles.actionBtn}>
                                 <i className="fas fa-eye" aria-hidden="true"></i> View Feedback
@@ -436,7 +450,7 @@ function TournamentManagement() {
                               </button>
                             )
                           ) : (
-                            <button style={{ ...styles.actionBtn, opacity: 0.6, cursor: 'not-allowed' }} title="Available after completion" disabled>
+                            <button style={{ ...styles.actionBtn, opacity: 0.6, cursor: 'not-allowed' }} title="Available when tournament starts" disabled>
                               <i className="fas fa-paper-plane" aria-hidden="true"></i> Send Feedback Form
                             </button>
                           )}

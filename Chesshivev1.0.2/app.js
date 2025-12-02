@@ -242,6 +242,51 @@ app.get('/api/session', (req, res) => {
   res.json({ userEmail: req.session.userEmail || null, userRole: req.session.userRole || null, username: req.session.username || null });
 });
 
+// Player notifications (root-level aliases for React client)
+app.get('/api/notifications', async (req, res) => {
+  try {
+    if (!req.session.userEmail || req.session.userRole !== 'player') {
+      return res.status(401).json({ error: 'Please log in' });
+    }
+    const db = await connectDB();
+    const user = await db.collection('users').findOne({ email: req.session.userEmail, role: 'player' });
+    if (!user) return res.status(404).json({ error: 'Player not found' });
+
+    const notifications = await db.collection('notifications').aggregate([
+      { $match: { user_id: user._id } },
+      { $lookup: { from: 'tournaments', localField: 'tournament_id', foreignField: '_id', as: 'tournament' } },
+      { $unwind: '$tournament' },
+      { $project: { _id: 1, type: 1, read: 1, date: 1, tournamentName: '$tournament.name', tournament_id: '$tournament._id' } }
+    ]).toArray();
+
+    const formatted = notifications.map(n => ({
+      ...n,
+      _id: n._id.toString(),
+      tournament_id: n.tournament_id.toString()
+    }));
+    return res.json({ notifications: formatted });
+  } catch (err) {
+    console.error('GET /api/notifications error:', err);
+    return res.status(500).json({ error: 'Failed to fetch notifications' });
+  }
+});
+
+app.post('/api/notifications/mark-read', async (req, res) => {
+  try {
+    if (!req.session.userEmail || req.session.userRole !== 'player') {
+      return res.status(401).json({ error: 'Please log in' });
+    }
+    const { id } = req.body || {};
+    if (!id) return res.status(400).json({ error: 'id required' });
+    const db = await connectDB();
+    await db.collection('notifications').updateOne({ _id: new ObjectId(id) }, { $set: { read: true } });
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('POST /api/notifications/mark-read error:', err);
+    return res.status(500).json({ error: 'Failed to mark as read' });
+  }
+});
+
 // Theme preference (persist per user)
 app.get('/api/theme', async (req, res) => {
   try {
@@ -426,3 +471,48 @@ app.use((req, res) => res.status(404).redirect('/?error-message=Page not found')
 
 connectDB().catch(err => console.error('Database connection failed:', err));
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+// --- Tournament status scheduler: mark Ongoing and auto-complete after 1 hour ---
+(function scheduleTournamentStatusUpdater() {
+  async function tick() {
+    try {
+      const db = await connectDB();
+      const now = new Date();
+      const list = await db.collection('tournaments').find({ status: { $in: ['Approved', 'Ongoing'] } }).toArray();
+      const toOngoing = [];
+      const toCompleted = [];
+      for (const t of list) {
+        if (!t || !t.date) continue;
+        const dateOnly = new Date(t.date);
+        const timeStr = (t.time || '00:00').toString();
+        const [hh, mm] = (timeStr.match(/^\d{2}:\d{2}$/) ? timeStr.split(':') : ['00', '00']);
+        const start = new Date(dateOnly);
+        start.setHours(parseInt(hh, 10) || 0, parseInt(mm, 10) || 0, 0, 0);
+        const end = new Date(start.getTime() + 60 * 60 * 1000);
+
+        if (now >= end) {
+          if (t.status !== 'Completed') toCompleted.push(t._id);
+        } else if (now >= start && now < end) {
+          if (t.status !== 'Ongoing') toOngoing.push(t._id);
+        }
+      }
+      if (toOngoing.length) {
+        await db.collection('tournaments').updateMany(
+          { _id: { $in: toOngoing } },
+          { $set: { status: 'Ongoing' } }
+        );
+      }
+      if (toCompleted.length) {
+        await db.collection('tournaments').updateMany(
+          { _id: { $in: toCompleted } },
+          { $set: { status: 'Completed', completed_at: new Date() } }
+        );
+      }
+    } catch (e) {
+      console.error('Tournament status scheduler error:', e);
+    }
+  }
+  // run immediately and every minute
+  tick();
+  setInterval(tick, 60 * 1000);
+})();
